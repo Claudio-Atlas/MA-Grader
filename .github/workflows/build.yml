@@ -11,6 +11,29 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: Install Python dependencies
+        working-directory: backend
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      
+      - name: Build Python backend with PyInstaller
+        working-directory: backend
+        run: |
+          pyinstaller server.spec
+          ls -la dist/
+      
+      - name: Prepare backend for bundling
+        run: |
+          mkdir -p frontend/extraResources/backend/dist
+          cp backend/dist/ma-grader-server frontend/extraResources/backend/dist/
+          chmod +x frontend/extraResources/backend/dist/ma-grader-server
+      
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -39,6 +62,29 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
+      
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: Install Python dependencies
+        working-directory: backend
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      
+      - name: Build Python backend with PyInstaller
+        working-directory: backend
+        run: |
+          pyinstaller server.spec
+          dir dist
+      
+      - name: Prepare backend for bundling
+        run: |
+          mkdir -p frontend/extraResources/backend/dist
+          cp backend/dist/ma-grader-server.exe frontend/extraResources/backend/dist/
+        shell: bash
       
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -104,13 +150,24 @@ jobs:
           tag_name: ${{ steps.version.outputs.tag }}
           name: MA Grader ${{ steps.version.outputs.version }}
           body: |
-            ## Download Links
+            ## Download Instructions
             
-            **Windows:** Download the `.exe` file below and run it.
+            ### Windows
+            1. Download **MA.Grader.Setup.x.x.x.exe** (recommended - includes install wizard)
+            2. Run the installer
+            3. ⚠️ **Windows may show a blue "Windows protected your PC" warning** — this is normal for apps not from the Microsoft Store
+               - Click **"More info"**
+               - Click **"Run anyway"**
+               - This only happens once!
+            4. Follow the install wizard → launches from Start Menu
             
-            **Mac:** Download the `.dmg` file below, open it, and drag MA Grader to Applications.
-            
-            > ⚠️ **Mac Users:** The first time you open the app, macOS may block it. Go to **System Settings → Privacy & Security** and click "Open Anyway".
+            ### Mac
+            1. Download the **.dmg** file
+            2. Open it and drag MA Grader to your Applications folder
+            3. ⚠️ **macOS may block the first launch** — this is normal for apps not from the App Store
+               - Go to **System Settings → Privacy & Security**
+               - Click **"Open Anyway"** next to the MA Grader message
+               - This only happens once!
             
             ---
             Built from commit ${{ github.sha }}
