@@ -30,6 +30,7 @@ dist-electron/
 *.egg-info/
 build/
 *.spec
+!backend/server.spec
 
 # Electron
 extraResources/
