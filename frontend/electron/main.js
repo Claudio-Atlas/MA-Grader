@@ -36,13 +36,21 @@ function startPythonBackend() {
   const backendPath = getBackendPath();
   const bundledExe = getBundledExecutable();
   
+  // Set UTF-8 encoding to handle emoji/unicode in output (fixes Windows encoding errors)
+  const processEnv = {
+    ...process.env,
+    PYTHONIOENCODING: 'utf-8',
+    PYTHONUTF8: '1'
+  };
+  
   if (bundledExe && !isDev) {
     // Production: use bundled executable
     console.log('Starting bundled backend:', bundledExe);
     
     pythonProcess = spawn(bundledExe, [], {
       cwd: backendPath,
-      stdio: ['pipe', 'pipe', 'pipe']
+      stdio: ['pipe', 'pipe', 'pipe'],
+      env: processEnv
     });
   } else {
     // Development: use Python directly
@@ -54,7 +62,8 @@ function startPythonBackend() {
     
     pythonProcess = spawn(pythonCmd, [serverScript], {
       cwd: backendPath,
-      stdio: ['pipe', 'pipe', 'pipe']
+      stdio: ['pipe', 'pipe', 'pipe'],
+      env: processEnv
     });
   }
   
@@ -86,7 +95,14 @@ function stopPythonBackend() {
 
 // Get the icon path based on platform
 function getIconPath() {
-  const assetsPath = path.join(__dirname, '..', 'assets');
+  let assetsPath;
+  if (isDev) {
+    assetsPath = path.join(__dirname, '..', 'assets');
+  } else {
+    // In production, assets are inside the app.asar or app folder
+    assetsPath = path.join(app.getAppPath(), 'assets');
+  }
+  
   if (process.platform === 'win32') {
     return path.join(assetsPath, 'icon.ico');
   } else {
