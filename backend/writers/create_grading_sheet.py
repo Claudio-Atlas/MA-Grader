@@ -1,0 +1,133 @@
+# writers/create_grading_sheets_from_folder.py
+
+import os
+import re
+import shutil
+
+from utilities.paths import ensure_dir, ws_path
+
+
+def _clean_name_parts_from_folder(folder_name: str):
+    """
+    Convert folder name like:
+      Jonathan_(Jonathan)_Chavez Chaparro_21222530
+    into clean:
+      first_name='Jonathan', last_name='Chavez Chaparro'
+
+    Rules:
+      - split by "_"
+      - drop trailing numeric ID tokens
+      - drop tokens that are ONLY parenthetical duplicates like "(Jonathan)"
+      - remove parentheses characters from remaining tokens
+      - collapse consecutive duplicates (Jonathan Jonathan)
+      - first = first token
+      - last = remaining tokens joined with "_" (keeps multi-part last names)
+    """
+    parts = [p.strip() for p in str(folder_name).split("_") if p.strip()]
+
+    # Remove pure numeric tokens (student ID)
+    parts = [p for p in parts if not p.isdigit()]
+
+    cleaned = []
+    for p in parts:
+        # Skip pure parenthetical token like "(Jonathan)"
+        if re.fullmatch(r"\(.*\)", p):
+            continue
+
+        # Remove parentheses characters if embedded
+        p = re.sub(r"[()]", "", p).strip()
+        if not p:
+            continue
+
+        # Skip consecutive duplicate tokens (case-insensitive)
+        if cleaned and cleaned[-1].lower() == p.lower():
+            continue
+
+        cleaned.append(p)
+
+    if not cleaned:
+        return "Unknown", "Unknown"
+
+    first = cleaned[0]
+    last = "_".join(cleaned[1:]) if len(cleaned) > 1 else "Unknown"
+    return first, last
+
+
+def create_grading_sheets_from_folder(course_label: str):
+    """
+    Creates (INSIDE WORKSPACE):
+        - A clean copy of each student's submission inside:
+              student_submissions/<course_label>/First_Last_MA1.xlsx
+        - A grading sheet copy for each student inside:
+              graded_output/<course_label>/First_Last_MA1_Grade.xlsx
+
+    Source of raw folders (INSIDE WORKSPACE):
+        student_groups/<course_label>/<student_folder>/
+
+    Returns:
+        (graded_output_path, submissions_path)
+        OR None if the course has no students.
+    """
+
+    # ✅ Template now lives in the workspace templates folder
+    template_path = ws_path("templates", "Grading_Sheet_Template.xlsx")
+
+    # ✅ Course folders inside workspace
+    student_groups_path = ensure_dir("student_groups", course_label)
+    graded_output_path = ensure_dir("graded_output", course_label)
+    submissions_path = ensure_dir("student_submissions", course_label)
+
+    # ---- Validate template exists ----
+    if not os.path.exists(template_path):
+        raise FileNotFoundError(
+            f"❌ Grading sheet template not found at:\n{template_path}\n\n"
+            f"Place it in Documents/MA1_Autograder/templates/Grading_Sheet_Template.xlsx"
+        )
+
+    # ---- Validate student groups folder ----
+    if not os.path.exists(student_groups_path):
+        print(f"❌ Source folder not found: {student_groups_path}")
+        return None
+
+    # ---- Get raw student folders ----
+    student_folders = [
+        f for f in os.listdir(student_groups_path)
+        if os.path.isdir(os.path.join(student_groups_path, f))
+    ]
+
+    if not student_folders:
+        print(f"📭 No student folders found inside: {student_groups_path}")
+        return None
+
+    # ---- Process each student ----
+    for folder_name in student_folders:
+        try:
+            first_name, last_name = _clean_name_parts_from_folder(folder_name)
+            readable_name = f"{first_name}_{last_name}"
+
+            submission_filename = f"{readable_name}_MA1.xlsx"
+            grading_filename = f"{readable_name}_MA1_Grade.xlsx"
+
+            folder_path = os.path.join(student_groups_path, folder_name)
+
+            excel_files = [f for f in os.listdir(folder_path) if f.endswith(".xlsx")]
+            if not excel_files:
+                print(f"⚠️ No Excel file found inside: {folder_name}")
+                continue
+
+            original_submission = os.path.join(folder_path, excel_files[0])
+            submission_dest = os.path.join(submissions_path, submission_filename)
+
+            # ---- Copy submission ----
+            shutil.copyfile(original_submission, submission_dest)
+
+            # ---- Copy grading template ----
+            grading_dest = os.path.join(graded_output_path, grading_filename)
+            shutil.copyfile(template_path, grading_dest)
+
+            print(f"✅ Prepared: {readable_name}")
+
+        except Exception as e:
+            print(f"❌ Error processing folder '{folder_name}': {e}")
+
+    return graded_output_path, submissions_path
