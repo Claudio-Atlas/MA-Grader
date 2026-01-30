@@ -62,3 +62,62 @@ jobs:
           path: |
             frontend/dist-electron/*.exe
           if-no-files-found: warn
+
+  release:
+    needs: [build-mac, build-windows]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Get version from package.json
+        id: version
+        run: |
+          VERSION=$(node -p "require('./frontend/package.json').version")
+          SHORT_SHA=$(echo ${{ github.sha }} | cut -c1-7)
+          echo "version=v${VERSION}" >> $GITHUB_OUTPUT
+          echo "tag=v${VERSION}-${SHORT_SHA}" >> $GITHUB_OUTPUT
+
+      - name: Download Mac artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: MA-Grader-Mac
+          path: ./release-files/mac
+
+      - name: Download Windows artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: MA-Grader-Windows
+          path: ./release-files/windows
+
+      - name: List downloaded files
+        run: |
+          echo "Mac files:"
+          ls -la ./release-files/mac/ || echo "No mac files"
+          echo "Windows files:"
+          ls -la ./release-files/windows/ || echo "No windows files"
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.version.outputs.tag }}
+          name: MA Grader ${{ steps.version.outputs.version }}
+          body: |
+            ## Download Links
+            
+            **Windows:** Download the `.exe` file below and run it.
+            
+            **Mac:** Download the `.dmg` file below, open it, and drag MA Grader to Applications.
+            
+            > ⚠️ **Mac Users:** The first time you open the app, macOS may block it. Go to **System Settings → Privacy & Security** and click "Open Anyway".
+            
+            ---
+            Built from commit ${{ github.sha }}
+          draft: false
+          prerelease: false
+          files: |
+            ./release-files/mac/*
+            ./release-files/windows/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
