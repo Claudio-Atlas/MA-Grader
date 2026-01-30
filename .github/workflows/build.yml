@@ -3,26 +3,14 @@ name: Build Electron App
 on:
   push:
     branches: [main]
-    tags:
-      - 'v*'
-  workflow_dispatch:  # Allow manual trigger
+  workflow_dispatch:
 
 jobs:
-  build:
-    strategy:
-      matrix:
-        include:
-          - os: macos-latest
-            platform: mac
-          - os: windows-latest
-            platform: win
-
-    runs-on: ${{ matrix.os }}
-
+  build-mac:
+    runs-on: macos-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
+      - uses: actions/checkout@v4
+      
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -30,41 +18,47 @@ jobs:
           cache: 'npm'
           cache-dependency-path: frontend/package-lock.json
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-
-      - name: Install frontend dependencies
+      - name: Install dependencies
         working-directory: frontend
         run: npm ci
-
-      - name: Install backend dependencies
-        working-directory: backend
-        run: |
-          pip install -r requirements.txt
-          pip install pyinstaller
-
-      - name: Bundle Python backend
-        working-directory: backend
-        run: |
-          pyinstaller --onefile --name ma-grader-server server.py
-          mkdir -p ../frontend/extraResources/backend/dist
-          cp -r dist/* ../frontend/extraResources/backend/dist/
 
       - name: Build Electron app
         working-directory: frontend
         run: npm run electron:build
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Upload artifacts
+      - name: Upload Mac artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: MA-Grader-${{ matrix.platform }}
+          name: MA-Grader-Mac
           path: |
             frontend/dist-electron/*.dmg
             frontend/dist-electron/*.zip
+          if-no-files-found: warn
+
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Build Electron app
+        working-directory: frontend
+        run: npm run electron:build
+
+      - name: Upload Windows artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: MA-Grader-Windows
+          path: |
             frontend/dist-electron/*.exe
-            frontend/dist-electron/*.msi
-          if-no-files-found: ignore
+          if-no-files-found: warn

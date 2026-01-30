@@ -5,6 +5,10 @@
   "main": "electron/main.js",
   "author": "Clayton Ragsdale",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Claudio-Atlas/MA-Grader.git"
+  },
   "scripts": {
     "dev": "vite",
     "build": "vite build",
@@ -35,6 +39,7 @@
   "build": {
     "appId": "com.atlasplatform.magrader",
     "productName": "MA Grader",
+    "publish": null,
     "directories": {
       "output": "dist-electron"
     },
