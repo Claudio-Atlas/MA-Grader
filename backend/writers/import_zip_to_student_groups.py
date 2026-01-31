@@ -27,7 +27,7 @@ def import_zip_to_student_groups(zip_path: str, course_label: str) -> str:
     if not course_label:
         raise ValueError("Course label cannot be blank.")
 
-    # ✅ Workspace destination
+    # [OK] Workspace destination
     dest_root = ensure_dir("student_groups", course_label)
 
     # Extract to a temporary folder first

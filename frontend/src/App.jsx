@@ -281,7 +281,7 @@ function App() {
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-4">
-            <img src="/logo.png" alt="ATLAS" className="w-16 h-16" />
+            <img src="./logo.png" alt="ATLAS" className="w-16 h-16" />
             <div>
               <h1 className="text-2xl font-bold text-dark-50">MA Grader</h1>
               <p className="text-dark-300 text-sm">Excel Assignment Auto-Grader</p>

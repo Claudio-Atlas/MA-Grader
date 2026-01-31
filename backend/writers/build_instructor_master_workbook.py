@@ -6,7 +6,7 @@ from typing import List, Optional
 from openpyxl import load_workbook
 from openpyxl.worksheet.worksheet import Worksheet
 
-from utilities.paths import ws_path  # ✅ workspace-aware template path
+from utilities.paths import ws_path  # [OK] workspace-aware template path
 
 
 SUMMARY_SHEET_NAME = "Summary_Template"
@@ -46,7 +46,7 @@ def _xl_escape_path(p: str) -> str:
 
 def _external_link_formula_local(grade_filename: str, cell_ref: str) -> str:
     """
-    ✅ Relative link (BEST) because INSTRUCTOR_MASTER.xlsx is saved in the SAME folder
+    [OK] Relative link (BEST) because INSTRUCTOR_MASTER.xlsx is saved in the SAME folder
     as all *_MA1_Grade.xlsx files.
 
     Example:
@@ -94,7 +94,7 @@ def build_instructor_master_workbook(
     if not os.path.isdir(graded_path):
         raise FileNotFoundError(f"graded_path not found: {graded_path}")
 
-    # ✅ Default template location is workspace templates folder
+    # [OK] Default template location is workspace templates folder
     if template_path is None:
         template_path = ws_path("templates", "Template_Master.xlsx")
     else:
@@ -102,7 +102,7 @@ def build_instructor_master_workbook(
 
     if not os.path.exists(template_path):
         raise FileNotFoundError(
-            f"❌ Template_Master.xlsx not found at:\n{template_path}\n\n"
+            f"[ERROR] Template_Master.xlsx not found at:\n{template_path}\n\n"
             f"Place it here:\nDocuments/MA1_Autograder/templates/Template_Master.xlsx"
         )
 

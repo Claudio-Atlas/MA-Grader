@@ -12,7 +12,7 @@ def phase2_export_all_charts(submissions_path: str):
 
     Exports into workspace: Documents/MA1_Autograder/temp_charts/
     """
-    print("\n📊 PHASE 2 — Exporting scatterplot charts...\n")
+    print("\n[CHART] PHASE 2 — Exporting scatterplot charts...\n")
 
     temp_dir = ensure_dir("temp_charts")
 
@@ -25,4 +25,4 @@ def phase2_export_all_charts(submissions_path: str):
         try:
             export_chart_to_image(full_path, image_output_dir=temp_dir)
         except Exception as e:
-            print(f"⚠️ Chart export failed for {filename}: {e}")
+            print(f"[WARN] Chart export failed for {filename}: {e}")

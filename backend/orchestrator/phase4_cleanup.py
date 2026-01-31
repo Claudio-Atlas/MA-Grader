@@ -16,4 +16,4 @@ def phase4_cleanup_temp(temp_folder: str = None):
 
     if os.path.exists(target):
         shutil.rmtree(target)
-        print(f"\n🧹 PHASE 4 — Cleaned up: {target}")
+        print(f"\n[CLEANUP] PHASE 4 — Cleaned up: {target}")

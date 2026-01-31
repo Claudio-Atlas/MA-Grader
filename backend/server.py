@@ -3,6 +3,12 @@
 
 import os
 import sys
+import io
+
+# Force UTF-8 encoding for stdout/stderr (fixes Windows charmap encoding errors)
+if sys.platform == 'win32':
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
+    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
 import asyncio
 from pathlib import Path
 from typing import Optional
@@ -232,13 +238,13 @@ async def run_pipeline_task(zip_path: str, course_label: str):
         pipeline_state["status"] = "completed"
         pipeline_state["current_step"] = "Complete!"
         pipeline_state["output_path"] = graded_path
-        print(f"\n✅ Grading complete! Output: {graded_path}")
+        print(f"\n[SUCCESS] Grading complete! Output: {graded_path}")
         
     except Exception as e:
         pipeline_state["status"] = "error"
         pipeline_state["current_step"] = "Error"
         pipeline_state["error"] = str(e)
-        print(f"\n❌ Error: {e}")
+        print(f"\n[ERROR] {e}")
         
     finally:
         sys.stdout = old_stdout

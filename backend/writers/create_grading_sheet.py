@@ -69,10 +69,10 @@ def create_grading_sheets_from_folder(course_label: str):
         OR None if the course has no students.
     """
 
-    # ✅ Template now lives in the workspace templates folder
+    # [OK] Template now lives in the workspace templates folder
     template_path = ws_path("templates", "Grading_Sheet_Template.xlsx")
 
-    # ✅ Course folders inside workspace
+    # [OK] Course folders inside workspace
     student_groups_path = ensure_dir("student_groups", course_label)
     graded_output_path = ensure_dir("graded_output", course_label)
     submissions_path = ensure_dir("student_submissions", course_label)
@@ -80,13 +80,13 @@ def create_grading_sheets_from_folder(course_label: str):
     # ---- Validate template exists ----
     if not os.path.exists(template_path):
         raise FileNotFoundError(
-            f"❌ Grading sheet template not found at:\n{template_path}\n\n"
+            f"[ERROR] Grading sheet template not found at:\n{template_path}\n\n"
             f"Place it in Documents/MA1_Autograder/templates/Grading_Sheet_Template.xlsx"
         )
 
     # ---- Validate student groups folder ----
     if not os.path.exists(student_groups_path):
-        print(f"❌ Source folder not found: {student_groups_path}")
+        print(f"[ERROR] Source folder not found: {student_groups_path}")
         return None
 
     # ---- Get raw student folders ----
@@ -112,7 +112,7 @@ def create_grading_sheets_from_folder(course_label: str):
 
             excel_files = [f for f in os.listdir(folder_path) if f.endswith(".xlsx")]
             if not excel_files:
-                print(f"⚠️ No Excel file found inside: {folder_name}")
+                print(f"[WARN] No Excel file found inside: {folder_name}")
                 continue
 
             original_submission = os.path.join(folder_path, excel_files[0])
@@ -125,9 +125,9 @@ def create_grading_sheets_from_folder(course_label: str):
             grading_dest = os.path.join(graded_output_path, grading_filename)
             shutil.copyfile(template_path, grading_dest)
 
-            print(f"✅ Prepared: {readable_name}")
+            print(f"[OK] Prepared: {readable_name}")
 
         except Exception as e:
-            print(f"❌ Error processing folder '{folder_name}': {e}")
+            print(f"[ERROR] Error processing folder '{folder_name}': {e}")
 
     return graded_output_path, submissions_path

@@ -64,7 +64,7 @@ def grade_single_file(submission_path: str, graded_output_folder: str) -> dict:
         write_income_analysis_scores(grading_ws, ia_results)
         results_out["income_analysis"] = ia_results
     except Exception as e:
-        print(f"⚠️ Income Analysis error: {e}")
+        print(f"[WARN] Income Analysis error: {e}")
 
     # ------------------------------
     # UNIT CONVERSIONS — V2
@@ -75,7 +75,7 @@ def grade_single_file(submission_path: str, graded_output_folder: str) -> dict:
         write_unit_conversions_scores_v2(grading_ws, uc_results)
         results_out["unit_conversions_v2"] = uc_results
     except Exception as e:
-        print(f"⚠️ Unit Conversions error: {e}")
+        print(f"[WARN] Unit Conversions error: {e}")
 
     # ------------------------------
     # CURRENCY CONVERSION — V2
@@ -88,7 +88,7 @@ def grade_single_file(submission_path: str, graded_output_folder: str) -> dict:
         write_currency_conversion_results_v2(grading_ws, cc_results)
         results_out["currency_conversion_v2"] = cc_results
     except Exception as e:
-        print(f"⚠️ Currency Conversion error: {e}")
+        print(f"[WARN] Currency Conversion error: {e}")
 
     # Save the updated grading workbook
     grading_wb.save(grading_path)

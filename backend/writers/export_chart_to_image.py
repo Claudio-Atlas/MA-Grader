@@ -52,7 +52,7 @@ def export_chart_to_image(student_path: str, image_output_dir: str = None) -> Op
 
     # macOS / Linux: Skip chart export (not supported without Excel COM)
     if not IS_WINDOWS or not HAS_WIN32:
-        print(f"ℹ️  Chart export skipped (not supported on {sys.platform})")
+        print(f"[INFO]  Chart export skipped (not supported on {sys.platform})")
         return None
 
     # Windows with pywin32: Use COM automation
@@ -94,10 +94,10 @@ def export_chart_to_image(student_path: str, image_output_dir: str = None) -> Op
                 chart = obj.Chart
                 if chart.ChartType == -4169:  # XY Scatter
                     chart.Export(image_path)
-                    print(f"📤 Exported chart → {image_path}")
+                    print(f"[EXPORT] Exported chart → {image_path}")
                     return image_path
 
-            print(f"⚠️ No XY Scatter chart found for {student_path}")
+            print(f"[WARN] No XY Scatter chart found for {student_path}")
             return None
 
         except Exception as e:
@@ -115,16 +115,16 @@ def export_chart_to_image(student_path: str, image_output_dir: str = None) -> Op
                         chart = obj.Chart
                         if chart.ChartType == -4169:
                             chart.Export(image_path)
-                            print(f"📤 Exported chart → {image_path}")
+                            print(f"[EXPORT] Exported chart → {image_path}")
                             return image_path
 
-                    print(f"⚠️ No XY Scatter chart found for {student_path}")
+                    print(f"[WARN] No XY Scatter chart found for {student_path}")
                     return None
                 except Exception as e2:
-                    print(f"❌ Chart export failed for {student_path}: {e2}")
+                    print(f"[ERROR] Chart export failed for {student_path}: {e2}")
                     return None
 
-            print(f"❌ Chart export failed for {student_path}: {e}")
+            print(f"[ERROR] Chart export failed for {student_path}: {e}")
             return None
 
         finally:

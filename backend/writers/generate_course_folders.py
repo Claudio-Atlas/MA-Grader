@@ -23,7 +23,7 @@ def generate_course_folders(course_label: str):
     graded_path = ensure_dir("graded_output", folder_safe_label)
     submissions_path = ensure_dir("student_submissions", folder_safe_label)
 
-    print(f"✅ Workspace folders ready for: {course_label}")
+    print(f"[OK] Workspace folders ready for: {course_label}")
     print(f"   - Student groups:   {groups_path}")
     print(f"   - Student files:    {submissions_path}")
     print(f"   - Graded output:    {graded_path}")

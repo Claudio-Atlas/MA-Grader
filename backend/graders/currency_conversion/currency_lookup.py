@@ -172,7 +172,7 @@ def get_country_entry_by_name(country_name: str):
 
     normalized = country_name.strip().lower()
 
-    # ✅ Allow flexible lookup ignoring repeated spaces or punctuation differences
+    # [OK] Allow flexible lookup ignoring repeated spaces or punctuation differences
     normalized = normalized.replace("'", "").replace(",", "").replace("(", "").replace(")", "").replace("  ", " ")
 
     for name, code in country_currency_dict.items():

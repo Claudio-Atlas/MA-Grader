@@ -10,7 +10,7 @@ def phase3_insert_all_charts(graded_output_path: str):
     """
     from writers.insert_saved_images_into_grading_sheets import insert_images_into_grading_sheets
 
-    print("\n📥 PHASE 3 — Inserting charts into grading sheets...\n")
+    print("\n[IMPORT] PHASE 3 — Inserting charts into grading sheets...\n")
 
     temp_dir = ensure_dir("temp_charts")
 

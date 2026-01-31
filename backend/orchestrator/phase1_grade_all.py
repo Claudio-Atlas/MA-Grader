@@ -23,7 +23,7 @@ def phase1_grade_all_students(submissions_path, graded_output_path):
     (Chart export and insertion happen in later phases.)
     """
 
-    print("\n📘 PHASE 1 — Grading all students...\n")
+    print("\n[INFO] PHASE 1 — Grading all students...\n")
 
     for filename in os.listdir(submissions_path):
         if not filename.endswith(".xlsx"):
@@ -54,7 +54,7 @@ def phase1_grade_all_students(submissions_path, graded_output_path):
                 uc_results = grade_unit_conversions_tab_v2(ws_unit)
                 write_unit_conversions_scores_v2(ws_grading, uc_results)
             except Exception as e:
-                print(f"⚠️ Unit Conversions error for {student_name}: {e}")
+                print(f"[WARN] Unit Conversions error for {student_name}: {e}")
 
             # -----------------------------
             # CURRENCY CONVERSION — V2 ONLY
@@ -64,10 +64,10 @@ def phase1_grade_all_students(submissions_path, graded_output_path):
                 cc_results = grade_currency_conversion_tab_v2(ws_currency, student_name)
                 write_currency_conversion_results_v2(ws_grading, cc_results)
             except Exception as e:
-                print(f"⚠️ Currency Conversion error for {student_name}: {e}")
+                print(f"[WARN] Currency Conversion error for {student_name}: {e}")
 
             grading_wb.save(grading_file)
-            print(f"✅ Graded: {student_name}")
+            print(f"[OK] Graded: {student_name}")
 
         except Exception as e:
-            print(f"❌ Error grading {student_name}: {e}")
+            print(f"[ERROR] Error grading {student_name}: {e}")

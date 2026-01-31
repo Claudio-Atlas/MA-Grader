@@ -80,5 +80,5 @@ def run_pipeline(zip_path: str, course_label: str) -> str:
     # -----------------------------
     build_instructor_master_workbook(graded_path)
 
-    # ✅ IMPORTANT: return a string (no trailing comma)
+    # [OK] IMPORTANT: return a string (no trailing comma)
     return graded_path
