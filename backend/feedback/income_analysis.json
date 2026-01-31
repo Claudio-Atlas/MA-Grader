@@ -17,9 +17,14 @@
   "IA_INTERCEPT_FORMAT_CORRECT": "The intercept value in {cell} is formatted correctly as a number with 0 decimal places.",
   "IA_INTERCEPT_FORMAT_INCORRECT": "The intercept value in {cell} is not formatted correctly. It should be displayed as a number with 0 decimal places.",
 
-  "IA_PREDICTIONS_ALL_CORRECT": "All predicted income formulas in {range} are correct and use the proper structure based on the slope and intercept.",
-  "IA_PREDICTIONS_NONE_CORRECT": "None of the predicted income formulas in {range} match the expected pattern. These cells should use a formula based on the slope (B30) and intercept (B31), such as =B30*D(row)+B31.",
-  "IA_PREDICTIONS_PARTIAL": "Some of the predicted income formulas are correct. {correct} out of {total} rows match the expected pattern using B30, D(row), and B31.",
+  "IA_PREDICTIONS_ALL_CORRECT": "All predicted income formulas in {range} are correct and reference the slope (B30), intercept (B31), and years of experience.",
+  "IA_PREDICTIONS_NONE_CORRECT": "None of the predicted income formulas in {range} match the expected pattern. These cells should use a formula like =B30*D19+B31 that references the slope, intercept, and years.",
+  "IA_PREDICTIONS_PARTIAL": "{correct} out of {total} predicted income formulas are correct. {issues}",
+  "IA_PREDICTIONS_NOT_FORMULAS": "{count} cells in {range} do not contain formulas. These should be formulas, not hardcoded values.",
+  "IA_PREDICTIONS_MISSING_REFS": "{count} formulas in {range} are missing references to {expected}.",
+  "IA_PREDICTIONS_MISSING_YEARS": "{count} formulas in {range} do not reference the corresponding years of experience cell (D column).",
+  "IA_PREDICTIONS_REFS_BUT_WRONG_VALUE": "{count} formulas in {range} reference B30/B31 but calculate an incorrect value.",
+  "IA_PREDICTIONS_VALUE_BUT_NO_REFS": "{count} cells in {range} have the correct value but do not use a formula referencing B30 and B31.",
 
   "IA_PRED_FORMAT_ALL_CORRECT": "All predicted income values in {range} are formatted correctly as currency with 0 decimal places.",
   "IA_PRED_FORMAT_NONE_CORRECT": "None of the predicted income values in {range} are formatted correctly. These cells should be formatted as currency with 0 decimal places.",
