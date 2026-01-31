@@ -9,7 +9,7 @@ def grade_row_29_v2(sheet):
 
     Requirements:
       - Accepts these normalized units: ft/mi, yr/d, d/h
-      - Accepts hr→h, day→d, year→yr in normalization
+      - Accepts hr->h, day->d, year->yr in normalization
       - Each ratio formula scored independently (2 pts each)
       - Each unit scored independently (1 pt each)
       - Final formula must multiply C29, F29, I29, L29 and use '*'
@@ -44,7 +44,7 @@ def grade_row_29_v2(sheet):
         u = u.replace("hr", "h")
         u = u.replace("day", "d")
         u = u.replace("year", "yr")
-        u = u.replace("y/", "yr/")   # If they wrote y/d → yr/d
+        u = u.replace("y/", "yr/")   # If they wrote y/d -> yr/d
         return u
 
     # ---------------------- Normalize formulas ----------------------
@@ -107,7 +107,7 @@ def grade_row_29_v2(sheet):
             ))
 
     # ============================================================
-    # 2. Final formula check — O29
+    # 2. Final formula check - O29
     # ============================================================
 
     required_refs = ["C29", "F29", "I29", "L29"]
@@ -125,7 +125,7 @@ def grade_row_29_v2(sheet):
         ))
 
     # ============================================================
-    # 3. Final unit check — P29
+    # 3. Final unit check - P29
     # ============================================================
 
     if P in {"ft/h", "ft/hr"}:

@@ -9,8 +9,8 @@ def grade_row_27_v2(sheet):
 
     Requirements:
       - Accepts gal/l and h/d conversions
-      - hr → h normalization
-      - day → d normalization
+      - hr -> h normalization
+      - day -> d normalization
       - Each F27/I27 cell graded independently
       - Final formula must include: C27, F27, I27 and use '*'
       - Final unit must normalize to exactly 'gal/d'
@@ -47,7 +47,7 @@ def grade_row_27_v2(sheet):
     I = norm_formula(sheet["I27"].value)
     O = norm_formula(sheet["O27"].value)
 
-    # Normalize unit text (including hr→h, day→d normalization)
+    # Normalize unit text (including hr->h, day->d normalization)
     def normalize_time(u):
         u = u.replace("hr", "h")
         u = u.replace("day", "d")
@@ -100,7 +100,7 @@ def grade_row_27_v2(sheet):
             ))
 
     # -------------------------------------------------------
-    # 4. Final formula check — O27
+    # 4. Final formula check - O27
     # -------------------------------------------------------
 
     required_refs = ["C27", "F27", "I27"]
@@ -118,7 +118,7 @@ def grade_row_27_v2(sheet):
         ))
 
     # -------------------------------------------------------
-    # 5. Final unit check — P27
+    # 5. Final unit check - P27
     # -------------------------------------------------------
 
     if P == "gal/d":  # strict

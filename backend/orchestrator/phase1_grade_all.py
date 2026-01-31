@@ -23,7 +23,7 @@ def phase1_grade_all_students(submissions_path, graded_output_path):
     (Chart export and insertion happen in later phases.)
     """
 
-    print("\n[INFO] PHASE 1 — Grading all students...\n")
+    print("\n[INFO] PHASE 1 - Grading all students...\n")
 
     for filename in os.listdir(submissions_path):
         if not filename.endswith(".xlsx"):
@@ -47,7 +47,7 @@ def phase1_grade_all_students(submissions_path, graded_output_path):
             write_income_analysis_scores(ws_grading, ia_results)
 
             # -----------------------------
-            # UNIT CONVERSIONS — V2 ONLY
+            # UNIT CONVERSIONS - V2 ONLY
             # -----------------------------
             try:
                 ws_unit = student_wb["Unit Conversions"]
@@ -57,7 +57,7 @@ def phase1_grade_all_students(submissions_path, graded_output_path):
                 print(f"[WARN] Unit Conversions error for {student_name}: {e}")
 
             # -----------------------------
-            # CURRENCY CONVERSION — V2 ONLY
+            # CURRENCY CONVERSION - V2 ONLY
             # -----------------------------
             try:
                 ws_currency = student_wb["Currency Conversion"]

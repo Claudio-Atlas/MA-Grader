@@ -33,14 +33,14 @@ def normalize_formula(val):
     s = s.replace(" ", "")
 
     # Remove wrapping parentheses around the entire expression
-    # Example: ((B30*D19)+B31) → (B30*D19)+B31 → B30*D19+B31
+    # Example: ((B30*D19)+B31) -> (B30*D19)+B31 -> B30*D19+B31
     if s.startswith("(") and s.endswith(")"):
         s = s[1:-1]
 
     # Convert to uppercase
     s = s.upper()
 
-    # Collapse double parentheses (( → (
+    # Collapse double parentheses (( -> (
     s = s.replace("((", "(")
     s = s.replace("))", ")")
 
@@ -55,7 +55,7 @@ def normalize_unit_text(val):
     Normalizes unit strings used across Unit Conversions.
     - Strips spaces
     - Lowercases
-    - Normalizes hr → h, day → d, year → yr
+    - Normalizes hr -> h, day -> d, year -> yr
     - Normalizes slashes: e.g., 'mcg/mg' stays 'mcg/mg'
     """
     if val is None:
@@ -71,7 +71,7 @@ def normalize_unit_text(val):
     s = s.replace("day", "d")
     s = s.replace("year", "yr")
 
-    # If student typed y/ → assume yr/
+    # If student typed y/ -> assume yr/
     if s.startswith("y/"):
         s = s.replace("y/", "yr/")
 
@@ -94,7 +94,7 @@ def normalize_time_unit(unit):
     u = u.replace("day", "d")
     u = u.replace("year", "yr")
 
-    # If student typed y/ → assume yr/
+    # If student typed y/ -> assume yr/
     if u.startswith("y/"):
         u = u.replace("y/", "yr/")
 

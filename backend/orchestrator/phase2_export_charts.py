@@ -12,7 +12,7 @@ def phase2_export_all_charts(submissions_path: str):
 
     Exports into workspace: Documents/MA1_Autograder/temp_charts/
     """
-    print("\n[CHART] PHASE 2 — Exporting scatterplot charts...\n")
+    print("\n[CHART] PHASE 2 - Exporting scatterplot charts...\n")
 
     temp_dir = ensure_dir("temp_charts")
 

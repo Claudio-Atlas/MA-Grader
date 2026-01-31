@@ -34,49 +34,49 @@ def run_pipeline(zip_path: str, course_label: str) -> str:
         raise ValueError("Course label cannot be blank.")
 
     # -----------------------------
-    # STEP 0 — Ensure workspace assets exist
+    # STEP 0 - Ensure workspace assets exist
     # (copies templates into Documents/MA1_Autograder/templates if missing)
     # -----------------------------
     ensure_workspace_assets()
 
     # -----------------------------
-    # STEP 1 — Create workspace course folders
+    # STEP 1 - Create workspace course folders
     # -----------------------------
     folder_safe, graded_path, submissions_path = generate_course_folders(course_label)
 
     # -----------------------------
-    # STEP 2 — Import ZIP into workspace student_groups/<course>
+    # STEP 2 - Import ZIP into workspace student_groups/<course>
     # -----------------------------
     import_zip_to_student_groups(zip_path, folder_safe)
 
     # -----------------------------
-    # STEP 3 — Create grading sheets + copy submissions
+    # STEP 3 - Create grading sheets + copy submissions
     # -----------------------------
     create_grading_sheets_from_folder(folder_safe)
 
     # -----------------------------
-    # STEP 4 — Grade all students (formulas)
+    # STEP 4 - Grade all students (formulas)
     # -----------------------------
     phase1_grade_all_students(submissions_path, graded_path)
 
     # -----------------------------
-    # STEP 5 — Export charts (to workspace temp_charts)
+    # STEP 5 - Export charts (to workspace temp_charts)
     # -----------------------------
     phase2_export_all_charts(submissions_path)
 
     # -----------------------------
-    # STEP 6 — Insert charts into grading sheets
+    # STEP 6 - Insert charts into grading sheets
     # -----------------------------
     phase3_insert_all_charts(graded_path)
 
     # -----------------------------
-    # STEP 7 — Cleanup temp files (workspace temp_charts)
+    # STEP 7 - Cleanup temp files (workspace temp_charts)
     # -----------------------------
     temp_charts_dir = ensure_dir("temp_charts")
     phase4_cleanup_temp(temp_charts_dir)
 
     # -----------------------------
-    # STEP 8 — Build Instructor Master
+    # STEP 8 - Build Instructor Master
     # -----------------------------
     build_instructor_master_workbook(graded_path)
 

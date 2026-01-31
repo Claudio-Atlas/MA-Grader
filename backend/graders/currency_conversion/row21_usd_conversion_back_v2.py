@@ -20,7 +20,7 @@ def _normalize_formula(formula):
 
 def grade_row21_usd_conversion_back_v2(sheet):
     """
-    Currency Conversion V2 — Row 21 (C21–F21)
+    Currency Conversion V2 - Row 21 (C21–F21)
 
     Rule (same as V1):
       Converts foreign amount (D4) back to USD using the corresponding rate in row 19:

@@ -96,7 +96,7 @@ def create_grading_sheets_from_folder(course_label: str):
     ]
 
     if not student_folders:
-        print(f"📭 No student folders found inside: {student_groups_path}")
+        print(f"[EMPTY] No student folders found inside: {student_groups_path}")
         return None
 
     # ---- Process each student ----

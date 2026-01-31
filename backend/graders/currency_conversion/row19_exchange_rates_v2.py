@@ -21,13 +21,13 @@ def fetch_live_usd_rates():
 
 def grade_row19_exchange_rates_v2(sheet, live_rates=None):
     """
-    Currency Conversion V2 — Row 19 (C19–F19)
+    Currency Conversion V2 - Row 19 (C19–F19)
 
     Uses the currency codes in C18–F18 to validate the exchange rates in C19–F19.
 
     Scoring (same as V1 actual code behavior):
-      - Accuracy: within ±5% of live rate → 1.0 pt each (max 4.0)
-      - Formatting: must show 3 decimals → 0.25 pt each (max 1.0)
+      - Accuracy: within ±5% of live rate -> 1.0 pt each (max 4.0)
+      - Formatting: must show 3 decimals -> 0.25 pt each (max 1.0)
 
     Returns:
       (total_score, accuracy_score, format_score, feedback)

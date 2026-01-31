@@ -29,7 +29,7 @@ def _split_student_name(student_name: str):
 
 def grade_row15_name_letters_v2(sheet, student_name: str):
     """
-    Currency Conversion V2 — Row 15 (C15–F15)
+    Currency Conversion V2 - Row 15 (C15–F15)
 
     Rule:
       - C15 = first_name[0]

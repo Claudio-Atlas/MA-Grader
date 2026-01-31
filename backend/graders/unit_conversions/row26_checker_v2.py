@@ -62,7 +62,7 @@ def grade_row_26_v2(sheet):
                                    {"cell": "J26", "expected": list(valid_units)}))
 
     # ==========================================================
-    # 2. FORMULA CHECKS — STRICT (Option A)
+    # 2. FORMULA CHECKS - STRICT (Option A)
     # ==========================================================
 
     # ----- F26 -----

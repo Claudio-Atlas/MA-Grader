@@ -67,7 +67,7 @@ def grade_single_file(submission_path: str, graded_output_folder: str) -> dict:
         print(f"[WARN] Income Analysis error: {e}")
 
     # ------------------------------
-    # UNIT CONVERSIONS — V2
+    # UNIT CONVERSIONS - V2
     # ------------------------------
     try:
         ws_unit = student_wb["Unit Conversions"]
@@ -78,7 +78,7 @@ def grade_single_file(submission_path: str, graded_output_folder: str) -> dict:
         print(f"[WARN] Unit Conversions error: {e}")
 
     # ------------------------------
-    # CURRENCY CONVERSION — V2
+    # CURRENCY CONVERSION - V2
     # Name source: filename "First_Last_MA1.xlsx" -> "First_Last"
     # ------------------------------
     try:

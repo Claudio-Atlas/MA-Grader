@@ -2,7 +2,7 @@
 
 def grade_row18_currency_codes_v2(sheet, country_entries):
     """
-    Currency Conversion V2 — Row 18 (C18–F18)
+    Currency Conversion V2 - Row 18 (C18–F18)
 
     Rule (same as V1):
       - Each cell must contain the correct currency code for the country

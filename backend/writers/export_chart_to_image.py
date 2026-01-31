@@ -94,7 +94,7 @@ def export_chart_to_image(student_path: str, image_output_dir: str = None) -> Op
                 chart = obj.Chart
                 if chart.ChartType == -4169:  # XY Scatter
                     chart.Export(image_path)
-                    print(f"[EXPORT] Exported chart → {image_path}")
+                    print(f"[EXPORT] Exported chart -> {image_path}")
                     return image_path
 
             print(f"[WARN] No XY Scatter chart found for {student_path}")
@@ -115,7 +115,7 @@ def export_chart_to_image(student_path: str, image_output_dir: str = None) -> Op
                         chart = obj.Chart
                         if chart.ChartType == -4169:
                             chart.Export(image_path)
-                            print(f"[EXPORT] Exported chart → {image_path}")
+                            print(f"[EXPORT] Exported chart -> {image_path}")
                             return image_path
 
                     print(f"[WARN] No XY Scatter chart found for {student_path}")
