@@ -5,10 +5,23 @@ import os
 import sys
 import io
 
+
+def _sanitize_for_windows(text):
+    """Remove/replace any characters that Windows cp1252 can't handle."""
+    if not isinstance(text, str):
+        text = str(text)
+    # Replace any character outside ASCII printable range
+    return text.encode('ascii', errors='replace').decode('ascii')
+
+
 # Force UTF-8 encoding for stdout/stderr (fixes Windows charmap encoding errors)
+# Note: This may not work in PyInstaller, so we also sanitize in LogCapture
 if sys.platform == 'win32':
-    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
-    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
+    try:
+        sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
+        sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
+    except Exception:
+        pass  # PyInstaller may not have buffer attribute
 import asyncio
 from pathlib import Path
 from typing import Optional
@@ -91,8 +104,14 @@ class LogCapture:
         
     def write(self, msg):
         if msg.strip():
-            pipeline_state["logs"].append(msg.strip())
-        self.original_stdout.write(msg)
+            # Sanitize to prevent Windows encoding errors
+            safe_msg = _sanitize_for_windows(msg.strip())
+            pipeline_state["logs"].append(safe_msg)
+        # Also sanitize before writing to original stdout
+        try:
+            self.original_stdout.write(msg)
+        except UnicodeEncodeError:
+            self.original_stdout.write(_sanitize_for_windows(msg))
         
     def flush(self):
         self.original_stdout.flush()
@@ -243,8 +262,9 @@ async def run_pipeline_task(zip_path: str, course_label: str):
     except Exception as e:
         pipeline_state["status"] = "error"
         pipeline_state["current_step"] = "Error"
-        pipeline_state["error"] = str(e)
-        print(f"\n[ERROR] {e}")
+        # Sanitize error message to prevent encoding issues
+        pipeline_state["error"] = _sanitize_for_windows(str(e))
+        print(f"\n[ERROR] {_sanitize_for_windows(str(e))}")
         
     finally:
         sys.stdout = old_stdout

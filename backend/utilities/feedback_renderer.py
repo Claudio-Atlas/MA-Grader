@@ -3,6 +3,13 @@
 from utilities.json_loader import load_feedback
 
 
+def _sanitize(text):
+    """Remove non-ASCII characters to prevent Windows encoding errors."""
+    if not isinstance(text, str):
+        text = str(text)
+    return text.encode('ascii', errors='replace').decode('ascii')
+
+
 def render_feedback(feedback_items, tab_name: str) -> str:
     """
     Convert feedback codes + params into final instructor-facing text
@@ -40,10 +47,12 @@ def render_feedback(feedback_items, tab_name: str) -> str:
                 continue
 
             try:
-                lines.append(template.format(**(params or {})))
+                # Sanitize all param values to prevent encoding errors
+                safe_params = {k: _sanitize(v) for k, v in (params or {}).items()}
+                lines.append(template.format(**safe_params))
             except Exception:
                 lines.append(f"[FORMAT ERROR] {code}: {params}")
         else:
-            lines.append(str(item))
+            lines.append(_sanitize(str(item)))
 
     return "\n".join(lines)
