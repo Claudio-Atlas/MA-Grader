@@ -56,16 +56,42 @@ jobs:
           CSC_IDENTITY_AUTO_DISCOVERY: false
           CSC_LINK: ""
 
-      - name: Remove signatures and quarantine flags
+      - name: Re-sign app with ad-hoc signature (fixes libffmpeg.dylib issue)
         run: |
-          # Find and unsign any .app bundles, remove quarantine attributes
-          find frontend/dist-electron -name "*.app" -type d | while read app; do
-            echo "Processing: $app"
-            # Remove code signature
-            codesign --remove-signature "$app" 2>/dev/null || true
-            # Remove extended attributes
-            xattr -cr "$app" 2>/dev/null || true
+          # Find the .app bundle
+          APP_PATH=$(find frontend/dist-electron -name "*.app" -type d | head -1)
+          echo "Found app: $APP_PATH"
+          
+          # Sign all dylibs inside frameworks first
+          find "$APP_PATH/Contents/Frameworks" -name "*.dylib" -type f | while read lib; do
+            echo "Signing dylib: $lib"
+            codesign --force --sign - "$lib"
           done
+          
+          # Sign all .so files
+          find "$APP_PATH/Contents/Frameworks" -name "*.so" -type f | while read lib; do
+            echo "Signing so: $lib"
+            codesign --force --sign - "$lib"
+          done
+          
+          # Sign all frameworks
+          find "$APP_PATH/Contents/Frameworks" -name "*.framework" -type d | while read fw; do
+            echo "Signing framework: $fw"
+            codesign --force --deep --sign - "$fw"
+          done
+          
+          # Sign all helper apps
+          find "$APP_PATH/Contents/Frameworks" -name "*.app" -type d | while read helper; do
+            echo "Signing helper: $helper"
+            codesign --force --deep --sign - "$helper"
+          done
+          
+          # Sign the main app
+          echo "Signing main app: $APP_PATH"
+          codesign --force --deep --sign - "$APP_PATH"
+          
+          # Verify
+          codesign --verify --deep --strict "$APP_PATH" && echo "Signature valid!" || echo "Signature verification failed"
 
       - name: Upload Mac artifacts
         uses: actions/upload-artifact@v4
