@@ -164,10 +164,18 @@ jobs:
             ### Mac
             1. Download the **.dmg** file
             2. Open it and drag MA Grader to your Applications folder
-            3. ⚠️ **macOS may block the first launch** — this is normal for apps not from the App Store
+            3. ⚠️ **macOS may block the app** — this is normal for apps not from the App Store
+               
+               **If you see "App is damaged and can't be opened":**
+               - Open **Terminal** (search for it in Spotlight)
+               - Run: `xattr -cr /Applications/MA\ Grader.app`
+               - Try opening the app again
+               
+               **If you see a security warning:**
                - Go to **System Settings → Privacy & Security**
                - Click **"Open Anyway"** next to the MA Grader message
-               - This only happens once!
+               
+               These steps only need to be done once!
             
             ---
             Built from commit ${{ github.sha }}
