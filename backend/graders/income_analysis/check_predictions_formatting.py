@@ -25,7 +25,7 @@ def _is_currency_zero_decimal(fmt: str) -> bool:
 
 def check_currency_formatting(ws):
     """
-    Check formatting of predicted values E19–E35.
+    Check formatting of predicted values E19-E35.
     Expected: currency with 0 decimal places.
 
     Returns:

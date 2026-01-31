@@ -5,7 +5,7 @@ from datetime import datetime, date
 
 def grade_row17_date_entries_v2(sheet):
     """
-    Currency Conversion V2 - Row 17 (C17–F17)
+    Currency Conversion V2 - Row 17 (C17-F17)
 
     Rule (same as V1):
       - Each cell must contain a valid date

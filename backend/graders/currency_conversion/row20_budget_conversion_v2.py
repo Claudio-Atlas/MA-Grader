@@ -5,7 +5,7 @@ from ..currency_conversion.utils import norm_unit
 
 def grade_row20_budget_conversion_v2(sheet):
     """
-    Currency Conversion V2 - Row 20 (C20–F20)
+    Currency Conversion V2 - Row 20 (C20-F20)
 
     Rule (same as V1):
       - Each cell must multiply B4 by corresponding exchange rate cell:

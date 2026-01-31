@@ -2,7 +2,7 @@
 
 def grade_row18_currency_codes_v2(sheet, country_entries):
     """
-    Currency Conversion V2 - Row 18 (C18–F18)
+    Currency Conversion V2 - Row 18 (C18-F18)
 
     Rule (same as V1):
       - Each cell must contain the correct currency code for the country
@@ -11,7 +11,7 @@ def grade_row18_currency_codes_v2(sheet, country_entries):
       - Works independently even if Row 16 was partially or fully incorrect.
 
     Inputs:
-      - country_entries: list of dicts or None, aligned with C16–F16
+      - country_entries: list of dicts or None, aligned with C16-F16
 
     Returns:
       (score: float, feedback: list[(code, params)])

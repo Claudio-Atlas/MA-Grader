@@ -41,7 +41,7 @@ def grade_unit_conversions_tab_v2(sheet):
     # Aggregate scoring
     # ------------------------
 
-    # Unit text score = sum of unit_text_score from rows 26–29
+    # Unit text score = sum of unit_text_score from rows 26-29
     unit_text_score = (
         r26["unit_text_score"]
         + r27["unit_text_score"]
@@ -49,7 +49,7 @@ def grade_unit_conversions_tab_v2(sheet):
         + r29["unit_text_score"]
     )
 
-    # Formula score = sum of formulas_score from rows 26–29
+    # Formula score = sum of formulas_score from rows 26-29
     formulas_score = (
         r26["formulas_score"]
         + r27["formulas_score"]

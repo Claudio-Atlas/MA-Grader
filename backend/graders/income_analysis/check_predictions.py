@@ -67,7 +67,7 @@ def _get_cell_calculated_value(ws, cell_ref: str) -> Optional[float]:
 
 def check_predictions(ws):
     """
-    Check predicted values in E19–E35.
+    Check predicted values in E19-E35.
     
     Grading logic:
     1. Formula must contain B30 AND B31 (cell references to slope/intercept)

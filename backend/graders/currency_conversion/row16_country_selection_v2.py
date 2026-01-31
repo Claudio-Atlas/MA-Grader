@@ -64,7 +64,7 @@ def _split_student_name(student_name: str):
 
 def grade_row16_country_selection_v2(sheet, student_name: str):
     """
-    Currency Conversion V2 - Row 16 (C16–F16)
+    Currency Conversion V2 - Row 16 (C16-F16)
 
     Rule:
       - C16, D16 must start with first two letters of FIRST name

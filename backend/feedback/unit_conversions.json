@@ -55,7 +55,7 @@
   "UC29_FINAL_UNIT_INCORRECT": "The unit entered in {cell} is incorrect. The expected final unit for this row is {expected}.",
 
 
-  "UC_TEMP_C40_CORRECT": "The formula in {cell} correctly converts Fahrenheit to Celsius using the required (5/9)*(A40−32) structure.",
+  "UC_TEMP_C40_CORRECT": "The formula in {cell} correctly converts Fahrenheit to Celsius using the required (5/9)*(A40-32) structure.",
   "UC_TEMP_C40_INCORRECT": "The formula in {cell} is incorrect. A valid Celsius conversion must include all of the following components: {required}.",
 
   "UC_TEMP_A41_CORRECT": "The formula in {cell} correctly converts Celsius back to Fahrenheit using the required (9/5)*C41 + 32 structure.",

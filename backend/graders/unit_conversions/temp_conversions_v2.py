@@ -63,14 +63,14 @@ def grade_temp_conversions_v2(sheet):
     V2 JSON-driven strict grader for temperature conversions on the Unit Conversions tab.
     
     Checks:
-      • C40 = (5/9)*(A40-32)
-      • A41 = (9/5)*C41 + 32
+      * C40 = (5/9)*(A40-32)
+      * A41 = (9/5)*C41 + 32
     Accepts parentheses, spacing differences, and reordered but equivalent expressions.
     
     Scoring:
-      • Full credit (2 pts): Has formula with correct cell refs
-      • Partial credit (1 pt): Has formula with correct calculated value but no cell refs
-      • No credit (0 pts): No formula or wrong value
+      * Full credit (2 pts): Has formula with correct cell refs
+      * Partial credit (1 pt): Has formula with correct calculated value but no cell refs
+      * No credit (0 pts): No formula or wrong value
     """
 
     # ----------------------- Score buckets -----------------------
