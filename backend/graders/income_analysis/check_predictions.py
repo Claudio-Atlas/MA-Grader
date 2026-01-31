@@ -14,28 +14,32 @@ is sufficient - if a student references the correct cells, their formula
 will produce the correct result.
 """
 
+from openpyxl.worksheet.formula import ArrayFormula
+
 
 def _has_required_refs(formula: str) -> bool:
     """
     Check if formula contains both B30 and B31 cell references.
-    Case-insensitive check.
+    Case-insensitive check. Handles absolute references ($B$30).
     """
     if not formula:
         return False
-    upper = formula.upper()
-    return "B30" in upper and "B31" in upper
+    # Remove $ signs to handle absolute references like $B$30
+    normalized = formula.upper().replace("$", "")
+    return "B30" in normalized and "B31" in normalized
 
 
 def _has_years_ref(formula: str, row: int) -> bool:
     """
     Check if formula references the years of experience cell (D column).
     The formula should reference D{row} for the corresponding years value.
+    Handles absolute references like $D$19 or $D19 or D$19.
     """
     if not formula:
         return False
-    upper = formula.upper()
-    # Should reference the D column for years - could be D19, D20, etc.
-    return f"D{row}" in upper or "$D$" in upper or "D$" in upper
+    # Remove $ signs to normalize absolute/mixed references
+    normalized = formula.upper().replace("$", "")
+    return f"D{row}" in normalized
 
 
 def check_predictions(ws):
@@ -62,12 +66,14 @@ def check_predictions(ws):
         cell = ws[f"E{row}"]
         value = cell.value
         
-        # Check if it's a formula
-        if not isinstance(value, str) or not value.startswith("="):
+        # Handle ArrayFormula objects (Excel 365 dynamic arrays)
+        if isinstance(value, ArrayFormula):
+            formula = value.text
+        elif isinstance(value, str) and value.startswith("="):
+            formula = value
+        else:
             not_formula += 1
             continue
-        
-        formula = value
         
         # Check 1: Does formula reference B30 AND B31?
         has_slope_intercept = _has_required_refs(formula)

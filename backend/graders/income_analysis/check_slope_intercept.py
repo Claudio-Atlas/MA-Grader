@@ -10,8 +10,8 @@ def check_slope_intercept(ws):
     slope_cell = ws["B30"]
     intercept_cell = ws["B31"]
 
-    slope_formula = slope_cell.value.strip().replace(" ", "").upper() if isinstance(slope_cell.value, str) else ""
-    intercept_formula = intercept_cell.value.strip().replace(" ", "").upper() if isinstance(intercept_cell.value, str) else ""
+    slope_formula = slope_cell.value.strip().replace(" ", "").replace("$", "").upper() if isinstance(slope_cell.value, str) else ""
+    intercept_formula = intercept_cell.value.strip().replace(" ", "").replace("$", "").upper() if isinstance(intercept_cell.value, str) else ""
 
     score = 0
     feedback = []
