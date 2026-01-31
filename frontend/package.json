@@ -1,6 +1,6 @@
 {
   "name": "ma-grader",
-  "version": "1.0.13",
+  "version": "1.0.14",
   "description": "MA Assignment Grader - Modern Desktop App",
   "main": "electron/main.js",
   "author": "Clayton Ragsdale",
@@ -52,20 +52,31 @@
       {
         "from": "extraResources/backend",
         "to": "backend",
-        "filter": ["**/*", "!__pycache__/**", "!*.pyc", "!venv/**"]
+        "filter": [
+          "**/*",
+          "!__pycache__/**",
+          "!*.pyc",
+          "!venv/**"
+        ]
       }
     ],
     "mac": {
       "category": "public.app-category.education",
       "icon": "assets/icon.icns",
-      "target": ["dmg", "zip"],
+      "target": [
+        "dmg",
+        "zip"
+      ],
       "identity": null,
       "hardenedRuntime": false,
       "gatekeeperAssess": false
     },
     "win": {
       "icon": "assets/icon.ico",
-      "target": ["nsis", "portable"]
+      "target": [
+        "nsis",
+        "portable"
+      ]
     }
   }
 }
