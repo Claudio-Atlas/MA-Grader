@@ -98,23 +98,26 @@ def get_workspace_root():
 # ============ Logging Capture ============
 
 class LogCapture:
-    """Captures print statements and stores them in pipeline_state"""
+    """
+    Captures print statements using StringIO (never touches real stdout).
+    This completely avoids Windows encoding issues because StringIO is pure Python.
+    """
     def __init__(self):
-        self.original_stdout = sys.stdout
+        self.buffer = io.StringIO()
         
     def write(self, msg):
+        # Write to StringIO (never fails - it's just memory)
+        self.buffer.write(msg)
+        # Also add to pipeline logs (sanitized)
         if msg.strip():
-            # Sanitize to prevent Windows encoding errors
             safe_msg = _sanitize_for_windows(msg.strip())
             pipeline_state["logs"].append(safe_msg)
-        # Also sanitize before writing to original stdout
-        try:
-            self.original_stdout.write(msg)
-        except UnicodeEncodeError:
-            self.original_stdout.write(_sanitize_for_windows(msg))
         
     def flush(self):
-        self.original_stdout.flush()
+        pass  # StringIO doesn't need flushing
+    
+    def getvalue(self):
+        return self.buffer.getvalue()
 
 
 # ============ API Endpoints ============
@@ -263,8 +266,12 @@ async def run_pipeline_task(zip_path: str, course_label: str):
         pipeline_state["status"] = "error"
         pipeline_state["current_step"] = "Error"
         # Sanitize error message to prevent encoding issues
-        pipeline_state["error"] = _sanitize_for_windows(str(e))
-        print(f"\n[ERROR] {_sanitize_for_windows(str(e))}")
+        error_msg = _sanitize_for_windows(str(e))
+        # Add diagnostic info for encoding errors
+        if "encode" in str(e).lower() or "codec" in str(e).lower():
+            error_msg += " [Hint: Check student files for emoji/special characters]"
+        pipeline_state["error"] = error_msg
+        print(f"\n[ERROR] {error_msg}")
         
     finally:
         sys.stdout = old_stdout
