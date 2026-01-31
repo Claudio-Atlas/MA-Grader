@@ -45,12 +45,27 @@ jobs:
         working-directory: frontend
         run: npm ci
 
-      - name: Build Electron app
+      - name: Build Electron app (unsigned)
         working-directory: frontend
-        run: npm run electron:build
+        run: |
+          # Build Vite first
+          npm run build
+          # Then build Electron without any signing
+          npx electron-builder --mac --config.mac.identity=null
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: false
           CSC_LINK: ""
+
+      - name: Remove signatures and quarantine flags
+        run: |
+          # Find and unsign any .app bundles, remove quarantine attributes
+          find frontend/dist-electron -name "*.app" -type d | while read app; do
+            echo "Processing: $app"
+            # Remove code signature
+            codesign --remove-signature "$app" 2>/dev/null || true
+            # Remove extended attributes
+            xattr -cr "$app" 2>/dev/null || true
+          done
 
       - name: Upload Mac artifacts
         uses: actions/upload-artifact@v4
