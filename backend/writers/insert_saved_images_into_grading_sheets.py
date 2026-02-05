@@ -5,6 +5,7 @@ import os
 import sys
 from pathlib import Path
 
+from utilities.logger import get_logger
 from utilities.paths import ensure_dir
 
 # Check if we're on Windows
@@ -27,7 +28,12 @@ def insert_images_into_grading_sheets(temp_chart_dir: str = None, graded_output_
     
     On Windows: Uses Excel COM automation
     On macOS: Uses openpyxl (if images exist)
+    
+    Args:
+        temp_chart_dir: Directory containing exported chart images
+        graded_output_dir: Directory containing grading sheets to insert into
     """
+    logger = get_logger()
 
     if not graded_output_dir:
         raise ValueError("graded_output_dir is required (should be the course folder).")
@@ -37,13 +43,15 @@ def insert_images_into_grading_sheets(temp_chart_dir: str = None, graded_output_
     graded_output_dir = os.path.abspath(graded_output_dir)
 
     if not os.path.isdir(temp_chart_dir):
-        print(f"[INFO]  No temp_chart_dir found: {temp_chart_dir} (skipping image insertion)")
+        logger.info(f"No temp_chart_dir found: {temp_chart_dir} (skipping image insertion)")
         return
 
     pngs = [f for f in os.listdir(temp_chart_dir) if f.lower().endswith(".png")]
     if not pngs:
-        print("[INFO]  No PNG charts found to insert (this is normal on macOS).")
+        logger.info("No PNG charts found to insert (this is normal on macOS)")
         return
+
+    logger.info(f"Found {len(pngs)} chart images to insert")
 
     # Use appropriate method based on platform
     if IS_WINDOWS and HAS_WIN32:
@@ -54,22 +62,28 @@ def insert_images_into_grading_sheets(temp_chart_dir: str = None, graded_output_
 
 def _insert_images_openpyxl(temp_chart_dir: str, graded_output_dir: str, pngs: list):
     """Insert images using openpyxl (cross-platform)."""
+    logger = get_logger()
+    
     try:
         from openpyxl import load_workbook
         from openpyxl.drawing.image import Image
     except ImportError:
-        print("[WARN] openpyxl not available for image insertion")
+        logger.warning("openpyxl not available for image insertion")
         return
+
+    inserted_count = 0
+    error_count = 0
 
     for image_file in pngs:
         student_name = Path(image_file).stem
         grading_file = os.path.join(graded_output_dir, f"{student_name}_MA1_Grade.xlsx")
 
         if not os.path.exists(grading_file):
-            print(f"[WARN] No grading sheet for {student_name}")
+            logger.warning(f"No grading sheet for {student_name}")
             continue
 
         image_path = os.path.join(temp_chart_dir, image_file)
+        wb = None
 
         try:
             wb = load_workbook(grading_file)
@@ -80,15 +94,29 @@ def _insert_images_openpyxl(temp_chart_dir: str, graded_output_dir: str, pngs: l
             ws.add_image(img)
 
             wb.save(grading_file)
-            print(f"[IMAGE] Inserted chart for {student_name}")
+            logger.debug(f"Inserted chart for {student_name}")
+            inserted_count += 1
 
         except Exception as e:
-            print(f"[ERROR] Failed to insert chart for {student_name}: {e}")
+            logger.error(f"Failed to insert chart for {student_name}: {e}")
+            error_count += 1
+        
+        finally:
+            # Ensure workbook is always closed to prevent file locks and memory leaks
+            if wb is not None:
+                wb.close()
+
+    logger.info(f"Image insertion complete: {inserted_count} inserted, {error_count} errors")
 
 
 def _insert_images_win32(temp_chart_dir: str, graded_output_dir: str, pngs: list):
     """Insert images using Windows COM automation."""
+    logger = get_logger()
+    
     pythoncom.CoInitialize()
+
+    inserted_count = 0
+    error_count = 0
 
     try:
         excel = None
@@ -103,7 +131,7 @@ def _insert_images_win32(temp_chart_dir: str, graded_output_dir: str, pngs: list
                 grading_file = os.path.join(graded_output_dir, f"{student_name}_MA1_Grade.xlsx")
 
                 if not os.path.exists(grading_file):
-                    print(f"[WARN] No grading sheet for {student_name}")
+                    logger.warning(f"No grading sheet for {student_name}")
                     continue
 
                 image_path = os.path.join(temp_chart_dir, image_file)
@@ -127,10 +155,12 @@ def _insert_images_win32(temp_chart_dir: str, graded_output_dir: str, pngs: list
                     wb.Save()
                     wb.Close()
                     wb = None
-                    print(f"[IMAGE] Inserted chart for {student_name}")
+                    logger.debug(f"Inserted chart for {student_name}")
+                    inserted_count += 1
 
                 except Exception as e:
-                    print(f"[ERROR] Failed to insert chart for {student_name}: {e}")
+                    logger.error(f"Failed to insert chart for {student_name}: {e}")
+                    error_count += 1
                     try:
                         if wb is not None:
                             wb.Close(SaveChanges=False)
@@ -146,3 +176,5 @@ def _insert_images_win32(temp_chart_dir: str, graded_output_dir: str, pngs: list
 
     finally:
         pythoncom.CoUninitialize()
+    
+    logger.info(f"Image insertion complete: {inserted_count} inserted, {error_count} errors")

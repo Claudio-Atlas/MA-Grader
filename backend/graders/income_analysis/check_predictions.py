@@ -1,39 +1,79 @@
-# graders/income_analysis/check_predictions.py
-
 """
-Check predicted salary values in E19:E35.
+check_predictions.py — Validate predicted salary formulas in E19:E35
 
-Grading logic:
-- Formula must reference BOTH B30 (slope) AND B31 (intercept)
-- If formula has correct cell references, we trust the calculation is correct
-  (openpyxl can't evaluate formulas without Excel)
+Purpose: Checks that students have correctly entered prediction formulas that
+         calculate predicted salary based on years of experience using the
+         slope and intercept values from B30 and B31.
 
-Note: We open workbooks with data_only=False to preserve formula text,
-which means we can't verify calculated values. The formula reference check
-is sufficient - if a student references the correct cells, their formula
-will produce the correct result.
+Author: Clayton Ragsdale
+Dependencies: openpyxl.worksheet.formula (for ArrayFormula handling)
+
+Expected Formula Pattern:
+    Each cell E19:E35 should contain: =B30*D{row}+B31
+    Where D{row} is the years of experience for that row.
+    
+Technical Note:
+    We open workbooks with data_only=False to preserve formula text,
+    which means we can't verify calculated values directly. The formula
+    reference check is sufficient - if a student references the correct
+    cells, their formula will produce the correct result.
 """
 
+from typing import Tuple, List, Dict, Any
+from openpyxl.worksheet.worksheet import Worksheet
 from openpyxl.worksheet.formula import ArrayFormula
 
 
 def _has_required_refs(formula: str) -> bool:
     """
-    Check if formula contains both B30 and B31 cell references.
-    Case-insensitive check. Handles absolute references ($B$30).
+    Check if formula contains both B30 (slope) and B31 (intercept) cell references.
+    
+    This validation ensures the prediction formula uses the calculated slope
+    and intercept values rather than hardcoded numbers.
+    
+    Args:
+        formula: The Excel formula string to check
+    
+    Returns:
+        bool: True if both B30 and B31 are referenced
+    
+    Example:
+        >>> _has_required_refs("=B30*D19+B31")
+        True
+        >>> _has_required_refs("=$B$30*D19+$B$31")
+        True
+        >>> _has_required_refs("=5000*D19+30000")
+        False
     """
     if not formula:
         return False
     # Remove $ signs to handle absolute references like $B$30
+    # Convert to uppercase for case-insensitive comparison
     normalized = formula.upper().replace("$", "")
     return "B30" in normalized and "B31" in normalized
 
 
 def _has_years_ref(formula: str, row: int) -> bool:
     """
-    Check if formula references the years of experience cell (D column).
+    Check if formula references the years of experience cell for this row.
+    
     The formula should reference D{row} for the corresponding years value.
-    Handles absolute references like $D$19 or $D19 or D$19.
+    For example, E19's formula should reference D19.
+    
+    Args:
+        formula: The Excel formula string to check
+        row: The row number (19-35)
+    
+    Returns:
+        bool: True if the formula references D{row}
+    
+    Example:
+        >>> _has_years_ref("=B30*D19+B31", 19)
+        True
+        >>> _has_years_ref("=$B$30*$D$19+$B$31", 19)
+        True
+        >>> _has_years_ref("=B30*D19+B31", 20)  # Wrong row
+        False
     """
     if not formula:
         return False
@@ -42,78 +82,118 @@ def _has_years_ref(formula: str, row: int) -> bool:
     return f"D{row}" in normalized
 
 
-def check_predictions(ws):
+def check_predictions(ws: Worksheet) -> Tuple[float, List[Tuple[str, Dict[str, Any]]]]:
     """
-    Check predicted values in E19:E35.
+    Check predicted salary values in cells E19:E35.
     
     Each prediction formula should:
-    1. Reference B30 (slope)
-    2. Reference B31 (intercept)
-    3. Reference the corresponding D column cell (years of experience)
+        1. Reference B30 (slope)
+        2. Reference B31 (intercept)
+        3. Reference the corresponding D column cell (years of experience)
     
-    Formula pattern: =B30*D19+B31 (or equivalent)
-
+    Expected Formula Pattern:
+        =B30*D19+B31 (for row 19)
+        =B30*D20+B31 (for row 20)
+        ... and so on through row 35
+    
+    Grading Logic:
+        - 6 points total for all 17 rows (E19:E35)
+        - Points are proportional: (correct_count / 17) * 6
+        - Full credit requires ALL cells to have correct formulas
+    
+    Error Categories:
+        - NOT_FORMULAS: Cell contains a value instead of a formula
+        - MISSING_REFS: Formula doesn't reference B30 and/or B31
+        - MISSING_YEARS: Formula doesn't reference the correct D column cell
+    
+    Args:
+        ws: The openpyxl Worksheet object for the Income Analysis tab
+    
     Returns:
-        (score: float, feedback: list[tuple[str, dict]])
+        Tuple of:
+            - score: float (0.0 to 6.0)
+            - feedback: List of (code, params) tuples describing results
+    
+    Example:
+        >>> score, feedback = check_predictions(worksheet)
+        >>> print(f"Predictions score: {score}/6.0")
     """
-    total_rows = 17
+    total_rows = 17  # E19 through E35
     correct_count = 0
     missing_slope_intercept = 0
     missing_years_ref = 0
     not_formula = 0
 
-    for row in range(19, 36):
+    # Check each prediction cell
+    for row in range(19, 36):  # Rows 19-35 inclusive
         cell = ws[f"E{row}"]
         value = cell.value
         
         # Handle ArrayFormula objects (Excel 365 dynamic arrays)
+        # Modern Excel can return formulas as ArrayFormula objects
         if isinstance(value, ArrayFormula):
             formula = value.text
         elif isinstance(value, str) and value.startswith("="):
+            # Standard formula string
             formula = value
         else:
+            # Not a formula (either a hardcoded value or empty)
             not_formula += 1
             continue
         
         # Check 1: Does formula reference B30 AND B31?
         has_slope_intercept = _has_required_refs(formula)
         
-        # Check 2: Does formula reference the years column?
+        # Check 2: Does formula reference the years column for this row?
         has_years = _has_years_ref(formula, row)
         
+        # Categorize the result
         if has_slope_intercept and has_years:
+            # Formula is correct
             correct_count += 1
         elif has_slope_intercept and not has_years:
             # Has slope/intercept but wrong/missing years reference
             missing_years_ref += 1
         elif not has_slope_intercept:
+            # Missing slope and/or intercept reference
             missing_slope_intercept += 1
 
-    # Build feedback
-    feedback = []
+    # ============================================================
+    # Build Feedback
+    # ============================================================
+    feedback: List[Tuple[str, Dict[str, Any]]] = []
     
+    # All correct - full credit
     if correct_count == total_rows:
         return 6.0, [("IA_PREDICTIONS_ALL_CORRECT", {"range": "E19:E35"})]
 
+    # None correct - zero credit with specific feedback
     if correct_count == 0:
-        # Provide specific feedback
         if not_formula > 0:
-            feedback.append(("IA_PREDICTIONS_NOT_FORMULAS", 
-                           {"count": not_formula, "range": "E19:E35"}))
+            feedback.append(("IA_PREDICTIONS_NOT_FORMULAS", {
+                "count": not_formula,
+                "range": "E19:E35"
+            }))
         if missing_slope_intercept > 0:
-            feedback.append(("IA_PREDICTIONS_MISSING_REFS", 
-                           {"count": missing_slope_intercept, "range": "E19:E35",
-                            "expected": "B30 (slope) and B31 (intercept)"}))
+            feedback.append(("IA_PREDICTIONS_MISSING_REFS", {
+                "count": missing_slope_intercept,
+                "range": "E19:E35",
+                "expected": "B30 (slope) and B31 (intercept)"
+            }))
         if missing_years_ref > 0:
-            feedback.append(("IA_PREDICTIONS_MISSING_YEARS", 
-                           {"count": missing_years_ref, "range": "E19:E35"}))
+            feedback.append(("IA_PREDICTIONS_MISSING_YEARS", {
+                "count": missing_years_ref,
+                "range": "E19:E35"
+            }))
         if not feedback:
+            # Fallback if no specific issues identified
             feedback.append(("IA_PREDICTIONS_NONE_CORRECT", {"range": "E19:E35"}))
         return 0.0, feedback
 
-    # Partial credit
+    # Partial credit - proportional scoring
     score = round(correct_count * (6 / total_rows), 1)
     
+    # Build details string for partial credit feedback
     details = []
     if missing_slope_intercept > 0:
         details.append(f"{missing_slope_intercept} missing B30/B31 refs")
@@ -122,7 +202,11 @@ def check_predictions(ws):
     if not_formula > 0:
         details.append(f"{not_formula} not formulas")
     
-    feedback.append(("IA_PREDICTIONS_PARTIAL", 
-                    {"correct": correct_count, "total": total_rows, 
-                     "range": "E19:E35", "issues": "; ".join(details) if details else ""}))
+    feedback.append(("IA_PREDICTIONS_PARTIAL", {
+        "correct": correct_count,
+        "total": total_rows,
+        "range": "E19:E35",
+        "issues": "; ".join(details) if details else ""
+    }))
+    
     return score, feedback

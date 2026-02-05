@@ -9,6 +9,7 @@ import shutil
 from pathlib import Path
 from typing import Optional
 
+from utilities.logger import get_logger
 from utilities.paths import ensure_dir
 
 # Check if we're on Windows
@@ -48,11 +49,19 @@ def export_chart_to_image(student_path: str, image_output_dir: str = None) -> Op
     
     On macOS: Charts cannot be exported without Excel COM. Returns None.
     On Windows: Uses Excel COM automation.
+    
+    Args:
+        student_path: Path to the student's submission workbook
+        image_output_dir: Directory to save the exported chart image
+        
+    Returns:
+        str or None: Path to exported image, or None if not exported
     """
+    logger = get_logger()
 
     # macOS / Linux: Skip chart export (not supported without Excel COM)
     if not IS_WINDOWS or not HAS_WIN32:
-        print(f"[INFO]  Chart export skipped (not supported on {sys.platform})")
+        logger.debug(f"Chart export skipped (not supported on {sys.platform})")
         return None
 
     # Windows with pywin32: Use COM automation
@@ -60,6 +69,7 @@ def export_chart_to_image(student_path: str, image_output_dir: str = None) -> Op
 
     try:
         student_path = os.path.abspath(student_path)
+        student_name = Path(student_path).stem.replace("_MA1", "")
 
         # Default to workspace temp_charts
         if not image_output_dir:
@@ -68,7 +78,6 @@ def export_chart_to_image(student_path: str, image_output_dir: str = None) -> Op
             image_output_dir = os.path.abspath(image_output_dir)
             Path(image_output_dir).mkdir(parents=True, exist_ok=True)
 
-        student_name = Path(student_path).stem.replace("_MA1", "")
         image_path = os.path.join(image_output_dir, f"{student_name}.png")
 
         excel = None
@@ -94,10 +103,10 @@ def export_chart_to_image(student_path: str, image_output_dir: str = None) -> Op
                 chart = obj.Chart
                 if chart.ChartType == -4169:  # XY Scatter
                     chart.Export(image_path)
-                    print(f"[EXPORT] Exported chart -> {image_path}")
+                    logger.info(f"Exported chart -> {student_name}.png")
                     return image_path
 
-            print(f"[WARN] No XY Scatter chart found for {student_path}")
+            logger.debug(f"No XY Scatter chart found for {student_name}")
             return None
 
         except Exception as e:
@@ -115,16 +124,16 @@ def export_chart_to_image(student_path: str, image_output_dir: str = None) -> Op
                         chart = obj.Chart
                         if chart.ChartType == -4169:
                             chart.Export(image_path)
-                            print(f"[EXPORT] Exported chart -> {image_path}")
+                            logger.info(f"Exported chart -> {student_name}.png")
                             return image_path
 
-                    print(f"[WARN] No XY Scatter chart found for {student_path}")
+                    logger.debug(f"No XY Scatter chart found for {student_name}")
                     return None
                 except Exception as e2:
-                    print(f"[ERROR] Chart export failed for {student_path}: {e2}")
+                    logger.error(f"Chart export failed for {student_name}: {e2}")
                     return None
 
-            print(f"[ERROR] Chart export failed for {student_path}: {e}")
+            logger.error(f"Chart export failed for {student_name}: {e}")
             return None
 
         finally:

@@ -4,6 +4,7 @@ import os
 import re
 import shutil
 
+from utilities.logger import get_logger
 from utilities.paths import ensure_dir, ws_path
 
 
@@ -68,6 +69,7 @@ def create_grading_sheets_from_folder(course_label: str):
         (graded_output_path, submissions_path)
         OR None if the course has no students.
     """
+    logger = get_logger()
 
     # [OK] Template now lives in the workspace templates folder
     template_path = ws_path("templates", "Grading_Sheet_Template.xlsx")
@@ -86,7 +88,7 @@ def create_grading_sheets_from_folder(course_label: str):
 
     # ---- Validate student groups folder ----
     if not os.path.exists(student_groups_path):
-        print(f"[ERROR] Source folder not found: {student_groups_path}")
+        logger.error(f"Source folder not found: {student_groups_path}")
         return None
 
     # ---- Get raw student folders ----
@@ -96,8 +98,13 @@ def create_grading_sheets_from_folder(course_label: str):
     ]
 
     if not student_folders:
-        print(f"[EMPTY] No student folders found inside: {student_groups_path}")
+        logger.warning(f"No student folders found inside: {student_groups_path}")
         return None
+
+    logger.info(f"Creating grading sheets for {len(student_folders)} students")
+
+    prepared_count = 0
+    error_count = 0
 
     # ---- Process each student ----
     for folder_name in student_folders:
@@ -112,7 +119,7 @@ def create_grading_sheets_from_folder(course_label: str):
 
             excel_files = [f for f in os.listdir(folder_path) if f.endswith(".xlsx")]
             if not excel_files:
-                print(f"[WARN] No Excel file found inside: {folder_name}")
+                logger.warning(f"No Excel file found inside: {folder_name}")
                 continue
 
             original_submission = os.path.join(folder_path, excel_files[0])
@@ -125,9 +132,13 @@ def create_grading_sheets_from_folder(course_label: str):
             grading_dest = os.path.join(graded_output_path, grading_filename)
             shutil.copyfile(template_path, grading_dest)
 
-            print(f"[OK] Prepared: {readable_name}")
+            logger.debug(f"Prepared: {readable_name}")
+            prepared_count += 1
 
         except Exception as e:
-            print(f"[ERROR] Error processing folder '{folder_name}': {e}")
+            logger.error(f"Error processing folder '{folder_name}': {e}")
+            error_count += 1
+
+    logger.info(f"Created {prepared_count} grading sheets ({error_count} errors)")
 
     return graded_output_path, submissions_path

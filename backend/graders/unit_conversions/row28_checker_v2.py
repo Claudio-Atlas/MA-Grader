@@ -1,35 +1,81 @@
-# graders/unit_conversions/row28_checker_v2.py
+"""
+row28_checker_v2.py — Grade Row 28 of Unit Conversions (kg/lb and in/cm)
+
+Purpose: Validates the conversion ratio formulas, unit labels, and final calculation
+         for Row 28, which uses THREE conversion ratios: kg/lb (twice, for lb in
+         numerator and denominator) and in/cm (for inch conversion).
+
+Author: Clayton Ragsdale
+Dependencies: graders.unit_conversions.utils
+
+Row 28 Layout:
+    C28: Starting value (given, in lb/in²)
+    F28: First conversion ratio formula
+    G28: First ratio unit label
+    I28: Second conversion ratio formula
+    J28: Second ratio unit label
+    L28: Third conversion ratio formula
+    M28: Third ratio unit label
+    O28: Final formula (=C28*F28*I28*L28)
+    P28: Final unit label (kg/cm²)
+
+Grading Criteria:
+    - Formulas (6 pts): 2 pts each for F28, I28, L28
+    - Unit labels (3 pts): 1 pt each for G28, J28, M28
+    - Final formula (2 pts): O28 must multiply C28*F28*I28*L28
+    - Final unit (1 pt): P28 must be "kg/cm^2"
+"""
+
+from typing import Dict, Any, List, Tuple
+from openpyxl.worksheet.worksheet import Worksheet
 
 from graders.unit_conversions.utils import norm_formula, norm_unit
 
 
-def grade_row_28_v2(sheet):
+def grade_row_28_v2(sheet: Worksheet) -> Dict[str, Any]:
     """
-    V2 JSON-driven strict grader for Row 28.
-
-    Requirements:
-      - Row 28 uses THREE conversion ratios:
-          1. kg/lb   (F/L columns)
-          2. in/cm   (F/I/L columns depending on student order)
-      - Each ratio formula scored independently (2 pts each)
-      - Each unit label scored independently (1 pt each)
-      - Final formula must multiply C28, F28, I28, L28 (in any order)
-      - Final unit must be exactly 'kg/cm^2'
+    V2 JSON-driven strict grader for Row 28 (kg/lb and in/cm conversions).
+    
+    Row 28 uses three conversion ratios to convert lb/in² to kg/cm²:
+        - kg/lb: Converts pounds to kilograms
+        - in/cm: Converts inches to centimeters (used twice for in²)
+    
+    Note: The kg/lb ratio is used once, and in/cm is used twice (for
+    squared units), but the grader accepts any valid combination that
+    could produce the correct result.
+    
+    Valid Formulas:
+        kg/lb ratio: =I9/L9, =1/L9 (references lookup table row 9)
+        in/cm ratio: =I20/L20, =1/L20 (references lookup table row 20)
+    
+    Args:
+        sheet: The openpyxl Worksheet object for the Unit Conversions tab
+    
+    Returns:
+        Dict containing scores and feedback for each grading category
     """
 
-    # ---------------------- Score buckets ----------------------
-    formulas_score = 0        # Max 6 (2*3 ratios)
-    unit_text_score = 0       # Max 3
-    final_formula_score = 0   # Max 2
-    final_unit_score = 0      # Max 1
+    # ============================================================
+    # Initialize scoring buckets
+    # ============================================================
+    formulas_score = 0        # Max 6 points (2 * 3 ratios)
+    unit_text_score = 0       # Max 3 points (1 * 3 labels)
+    final_formula_score = 0   # Max 2 points
+    final_unit_score = 0      # Max 1 point
 
-    # ---------------------- Feedback buckets ----------------------
-    formulas_feedback = []
-    unit_text_feedback = []
-    final_formula_feedback = []
-    final_unit_feedback = []
+    # ============================================================
+    # Initialize feedback buckets
+    # ============================================================
+    formulas_feedback: List[Tuple[str, Dict[str, Any]]] = []
+    unit_text_feedback: List[Tuple[str, Dict[str, Any]]] = []
+    final_formula_feedback: List[Tuple[str, Dict[str, Any]]] = []
+    final_unit_feedback: List[Tuple[str, Dict[str, Any]]] = []
 
-    # ---------------------- Valid formulas ----------------------
+    # ============================================================
+    # Define valid formulas for Row 28
+    # ============================================================
+    # Row 9: kg/lb conversion (L9 = 2.205)
+    # Row 20: in/cm conversion (L20 = 2.54)
     ratio_options = {
         "kg/lb": {"=I9/L9", "=1/L9"},
         "in/cm": {"=I20/L20", "=1/L20"}
@@ -37,7 +83,9 @@ def grade_row_28_v2(sheet):
 
     accepted_units = {"kg/lb", "in/cm"}
 
-    # ---------------------- Normalize inputs ----------------------
+    # ============================================================
+    # Normalize cell values
+    # ============================================================
     F = norm_formula(sheet["F28"].value)
     G = norm_unit(sheet["G28"].value)
 
@@ -50,21 +98,20 @@ def grade_row_28_v2(sheet):
     O = norm_formula(sheet["O28"].value)
     P = norm_unit(sheet["P28"].value)
 
-    # For looping over 3 independent pairs
+    # Define cell pairs to check (3 ratios in Row 28)
     pairs = [
         ("F28", F, "G28", G),
         ("I28", I, "J28", J),
         ("L28", L, "M28", M)
     ]
 
-    # Track usage to ensure a ratio cannot get double-counted
+    # Track ratio usage for debugging (optional)
     ratio_usage = {"kg/lb": 0, "in/cm": 0}
     unit_usage = {"kg/lb": 0, "in/cm": 0}
 
     # ============================================================
-    # 1. Evaluate the three formula/unit pairs independently
+    # Evaluate the three formula/unit pairs independently
     # ============================================================
-
     for formula_cell, formula_val, unit_cell, unit_val in pairs:
 
         # ----- UNIT CHECK -----
@@ -101,9 +148,9 @@ def grade_row_28_v2(sheet):
             ))
 
     # ============================================================
-    # 2. Final Formula Check (O28)
+    # Final Formula Check (O28)
     # ============================================================
-
+    # Must reference all four cells with multiplication
     required_refs = ["C28", "F28", "I28", "L28"]
 
     if all(ref in O for ref in required_refs) and "*" in O:
@@ -119,9 +166,9 @@ def grade_row_28_v2(sheet):
         ))
 
     # ============================================================
-    # 3. Final Unit Check (P28)
+    # Final Unit Check (P28)
     # ============================================================
-
+    # After all conversions, result should be kg/cm²
     if P == "kg/cm^2":
         final_unit_score = 1
         final_unit_feedback.append((
@@ -135,9 +182,8 @@ def grade_row_28_v2(sheet):
         ))
 
     # ============================================================
-    # 4. Return V2 structure
+    # Return V2 structure
     # ============================================================
-
     return {
         "formulas_score": formulas_score,
         "unit_text_score": unit_text_score,
@@ -149,7 +195,7 @@ def grade_row_28_v2(sheet):
         "final_formula_feedback": final_formula_feedback,
         "final_unit_feedback": final_unit_feedback,
 
-        # Debug info (optional but useful)
+        # Debug info (useful for troubleshooting)
         "debug_usage": {
             "ratio_usage": ratio_usage,
             "unit_usage": unit_usage

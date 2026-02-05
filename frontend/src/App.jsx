@@ -15,7 +15,8 @@ import {
   RefreshCw,
   Settings,
   X,
-  Folder
+  Folder,
+  StopCircle
 } from 'lucide-react';
 
 const API_BASE = 'http://127.0.0.1:8765';
@@ -207,6 +208,19 @@ function App() {
     }
   };
 
+  // Cancel running pipeline
+  const handleCancel = async () => {
+    try {
+      const res = await fetch(`${API_BASE}/cancel`, { method: 'POST' });
+      if (res.ok) {
+        const data = await res.json();
+        console.log('Cancel response:', data);
+      }
+    } catch (err) {
+      console.error('Cancel failed:', err);
+    }
+  };
+
   // Open folder
   const handleOpenFolder = (path) => {
     if (window.electronAPI && path) {
@@ -226,6 +240,7 @@ function App() {
     const configs = {
       idle: { color: 'bg-dark-500', text: 'Ready', icon: null },
       running: { color: 'bg-accent-yellow', text: 'Running', icon: <Loader className="w-4 h-4 animate-spin" /> },
+      cancelled: { color: 'bg-orange-500', text: 'Cancelled', icon: <StopCircle className="w-4 h-4" /> },
       completed: { color: 'bg-accent-green', text: 'Complete', icon: <CheckCircle className="w-4 h-4" /> },
       error: { color: 'bg-accent-red', text: 'Error', icon: <AlertCircle className="w-4 h-4" /> },
     };
@@ -423,6 +438,9 @@ function App() {
           {state.status === 'completed' && (
             <p className="text-accent-green text-sm">✓ Grading complete! Output ready.</p>
           )}
+          {state.status === 'cancelled' && (
+            <p className="text-orange-400 text-sm">⊘ Pipeline cancelled by user.</p>
+          )}
           {state.status === 'error' && (
             <p className="text-accent-red text-sm">✕ {state.error}</p>
           )}
@@ -466,31 +484,45 @@ function App() {
           />
         </div>
 
-        {/* Main action button */}
-        <button
-          onClick={handleRunPipeline}
-          disabled={!zipPath || !courseLabel || state.status === 'running'}
-          className={`
-            w-full py-4 rounded-xl font-semibold text-lg flex items-center justify-center gap-3
-            transition-all duration-200
-            ${!zipPath || !courseLabel || state.status === 'running'
-              ? 'bg-dark-600 text-dark-400 cursor-not-allowed'
-              : 'bg-accent-red hover:bg-accent-red-hover text-white shadow-lg shadow-accent-red/25'
-            }
-          `}
-        >
-          {state.status === 'running' ? (
-            <>
-              <Loader className="w-5 h-5 animate-spin" />
-              Processing...
-            </>
-          ) : (
-            <>
-              <Play className="w-5 h-5" />
-              Run Pipeline
-            </>
+        {/* Main action buttons */}
+        <div className="flex gap-3">
+          <button
+            onClick={handleRunPipeline}
+            disabled={!zipPath || !courseLabel || state.status === 'running'}
+            className={`
+              flex-1 py-4 rounded-xl font-semibold text-lg flex items-center justify-center gap-3
+              transition-all duration-200
+              ${!zipPath || !courseLabel || state.status === 'running'
+                ? 'bg-dark-600 text-dark-400 cursor-not-allowed'
+                : 'bg-accent-red hover:bg-accent-red-hover text-white shadow-lg shadow-accent-red/25'
+              }
+            `}
+          >
+            {state.status === 'running' ? (
+              <>
+                <Loader className="w-5 h-5 animate-spin" />
+                Processing...
+              </>
+            ) : (
+              <>
+                <Play className="w-5 h-5" />
+                Run Pipeline
+              </>
+            )}
+          </button>
+          
+          {/* Cancel button - only shown when running */}
+          {state.status === 'running' && (
+            <button
+              onClick={handleCancel}
+              className="px-6 py-4 rounded-xl font-semibold text-lg flex items-center justify-center gap-2 bg-orange-600 hover:bg-orange-700 text-white transition-all duration-200"
+              title="Cancel the current grading operation"
+            >
+              <StopCircle className="w-5 h-5" />
+              Cancel
+            </button>
           )}
-        </button>
+        </div>
 
         {/* Quick actions */}
         <div className="grid grid-cols-4 gap-3 mt-6">

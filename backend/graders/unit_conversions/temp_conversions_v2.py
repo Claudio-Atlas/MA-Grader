@@ -1,16 +1,50 @@
-# graders/unit_conversions/temp_conversions_v2.py
+"""
+temp_conversions_v2.py — Grade temperature conversion formulas (C40 and A41)
+
+Purpose: Validates the Fahrenheit-to-Celsius (C40) and Celsius-to-Fahrenheit (A41)
+         conversion formulas on the Unit Conversions tab. These formulas should
+         reference the input cells and use the correct conversion factors.
+
+Author: Clayton Ragsdale
+Dependencies: graders.unit_conversions.utils
+
+Temperature Conversion Formulas:
+    C40 (Fahrenheit to Celsius): = (5/9) * (A40 - 32)
+    A41 (Celsius to Fahrenheit): = (9/5) * C41 + 32
+
+Grading Criteria:
+    - Full credit (2 pts): Formula has correct cell references and conversion factor
+    - Partial credit (1 pt): Formula produces correct value but missing cell references
+    - No credit (0 pts): No formula or wrong result
+"""
+
+from typing import Dict, Any, List, Tuple, Optional
+from openpyxl.worksheet.worksheet import Worksheet
 
 from graders.unit_conversions.utils import norm_formula
 
 
-def _get_cell_value(sheet, cell_ref: str):
-    """Get the numeric value of a cell (handles both values and cached formula results)."""
+def _get_cell_value(sheet: Worksheet, cell_ref: str) -> Optional[float]:
+    """
+    Get the numeric value of a cell (handles both values and cached formula results).
+    
+    Note: When opening workbooks with data_only=False, formula cells show the
+    formula text, not the calculated value. This function returns None for
+    formula cells since we can't evaluate them without Excel.
+    
+    Args:
+        sheet: The openpyxl Worksheet object
+        cell_ref: Cell reference (e.g., "A40", "C40")
+    
+    Returns:
+        float: The numeric value if the cell contains a number
+        None: If the cell is empty, contains a formula, or isn't numeric
+    """
     try:
         cell = sheet[cell_ref]
         value = cell.value
         
-        # If it's a formula, we can't evaluate it directly
-        # But we can check if there's a cached value
+        # If it's a formula string, we can't get the calculated value
         if isinstance(value, str) and value.startswith("="):
             return None
             
@@ -22,10 +56,20 @@ def _get_cell_value(sheet, cell_ref: str):
         return None
 
 
-def _check_c40_calculated_value(sheet) -> bool:
+def _check_c40_calculated_value(sheet: Worksheet) -> bool:
     """
     Check if C40 has the correct calculated value for Fahrenheit to Celsius.
+    
     Formula: (5/9) * (A40 - 32)
+    
+    This is used for partial credit when the student has a formula that
+    produces the correct result but doesn't properly reference cell A40.
+    
+    Args:
+        sheet: The openpyxl Worksheet object
+    
+    Returns:
+        bool: True if C40's value matches the expected calculation
     """
     try:
         a40_val = _get_cell_value(sheet, "A40")
@@ -34,16 +78,28 @@ def _check_c40_calculated_value(sheet) -> bool:
         if a40_val is None or c40_val is None:
             return False
             
+        # Calculate expected Celsius value
         expected = (5/9) * (a40_val - 32)
+        # Allow small floating-point tolerance
         return abs(expected - c40_val) < 0.01
     except (TypeError, ValueError):
         return False
 
 
-def _check_a41_calculated_value(sheet) -> bool:
+def _check_a41_calculated_value(sheet: Worksheet) -> bool:
     """
     Check if A41 has the correct calculated value for Celsius to Fahrenheit.
+    
     Formula: (9/5) * C41 + 32
+    
+    This is used for partial credit when the student has a formula that
+    produces the correct result but doesn't properly reference cell C41.
+    
+    Args:
+        sheet: The openpyxl Worksheet object
+    
+    Returns:
+        bool: True if A41's value matches the expected calculation
     """
     try:
         c41_val = _get_cell_value(sheet, "C41")
@@ -52,97 +108,143 @@ def _check_a41_calculated_value(sheet) -> bool:
         if c41_val is None or a41_val is None:
             return False
             
+        # Calculate expected Fahrenheit value
         expected = (9/5) * c41_val + 32
+        # Allow small floating-point tolerance
         return abs(expected - a41_val) < 0.01
     except (TypeError, ValueError):
         return False
 
 
-def grade_temp_conversions_v2(sheet):
+def grade_temp_conversions_v2(sheet: Worksheet) -> Dict[str, Any]:
     """
-    V2 JSON-driven strict grader for temperature conversions on the Unit Conversions tab.
+    V2 JSON-driven strict grader for temperature conversions.
     
-    Checks:
-      * C40 = (5/9)*(A40-32)
-      * A41 = (9/5)*C41 + 32
-    Accepts parentheses, spacing differences, and reordered but equivalent expressions.
+    Checks two temperature conversion formulas:
+        - C40: Fahrenheit to Celsius = (5/9) * (A40 - 32)
+        - A41: Celsius to Fahrenheit = (9/5) * C41 + 32
     
-    Scoring:
-      * Full credit (2 pts): Has formula with correct cell refs
-      * Partial credit (1 pt): Has formula with correct calculated value but no cell refs
-      * No credit (0 pts): No formula or wrong value
+    Grading Logic:
+        For each formula (C40 and A41):
+        - 2 points: Has formula with correct conversion factor AND cell references
+        - 1 point: Has formula with correct calculated value but missing cell refs
+        - 0 points: No formula, wrong formula, or incorrect value
+    
+    Required Formula Components:
+        C40: Must contain "A40-32" AND "5/9" AND multiplication (*)
+        A41: Must contain "C41" AND "9/5" AND "+32" AND multiplication (*)
+    
+    Args:
+        sheet: The openpyxl Worksheet object for the Unit Conversions tab
+    
+    Returns:
+        Dict containing:
+            - temp_and_celsius_score: int (0-4)
+            - temp_and_celsius_feedback: List of (code, params) tuples
     """
 
-    # ----------------------- Score buckets -----------------------
-    score = 0        # 4 points max (2 for each formula)
-    feedback = []    # list of (code, params)
+    # ============================================================
+    # Initialize scoring
+    # ============================================================
+    score = 0  # Max 4 points (2 per formula)
+    feedback: List[Tuple[str, Dict[str, Any]]] = []
 
-    # ----------------------- Extract and normalize -----------------------
-    c40 = norm_formula(sheet["C40"].value)
-    a41 = norm_formula(sheet["A41"].value)
+    # ============================================================
+    # Extract and normalize values
+    # ============================================================
+    # Important: Check for formula (starts with "=") on RAW value BEFORE
+    # normalizing, since normalization may strip or modify the "=" sign
+    c40_raw = sheet["C40"].value
+    a41_raw = sheet["A41"].value
+    
+    # Determine if cells contain formulas
+    c40_is_formula = isinstance(c40_raw, str) and c40_raw.strip().startswith("=")
+    a41_is_formula = isinstance(a41_raw, str) and a41_raw.strip().startswith("=")
+    
+    # Now normalize for pattern matching
+    c40 = norm_formula(c40_raw)
+    a41 = norm_formula(a41_raw)
 
-    # C40 requirements (cell refs)
+    # ============================================================
+    # Define required formula components
+    # ============================================================
+    
+    # C40: Fahrenheit to Celsius
+    # Formula pattern: (5/9)*(A40-32)
+    # Required fragments (after normalization to uppercase)
     required_c40 = {
-        "A40-32",
-        "5/9"
+        "A40-32",   # Must reference A40 and subtract 32
+        "5/9"       # Must have 5/9 conversion factor
     }
 
-    # A41 requirements (cell refs)
+    # A41: Celsius to Fahrenheit
+    # Formula pattern: (9/5)*C41+32
     required_a41 = {
-        "C41",
-        "9/5",
-        "+32"
+        "C41",      # Must reference C41
+        "9/5",      # Must have 9/5 conversion factor
+        "+32"       # Must add 32
     }
 
     # ============================================================
-    # 1. Grade C40 formula
+    # Grade C40 formula (Fahrenheit to Celsius)
     # ============================================================
-
-    c40_has_formula = isinstance(c40, str) and c40.startswith("=") and "*" in c40
+    
+    # Check if it's a formula with multiplication
+    c40_has_formula = c40_is_formula and isinstance(c40, str) and "*" in c40
+    # Check if formula has all required components
     c40_has_refs = c40_has_formula and all(fragment in c40 for fragment in required_c40)
 
     if c40_has_refs:
-        # Full credit: formula with cell references
+        # Full credit: formula with correct cell references and conversion factor
         score += 2
         feedback.append(("UC_TEMP_C40_CORRECT", {"cell": "C40"}))
     elif c40_has_formula and _check_c40_calculated_value(sheet):
-        # Partial credit: formula without cell refs but correct value
+        # Partial credit: formula produces correct value but missing cell refs
         score += 1
         feedback.append(("UC_TEMP_C40_PARTIAL", {
             "cell": "C40",
-            "note": "Formula produces correct value but missing cell reference (A40). Use cell references for full credit."
+            "note": "Formula produces correct value but missing cell reference (A40). "
+                    "Use cell references for full credit."
         }))
     else:
-        feedback.append(("UC_TEMP_C40_INCORRECT",
-                         {"cell": "C40", "required": list(required_c40)}))
+        # No credit
+        feedback.append(("UC_TEMP_C40_INCORRECT", {
+            "cell": "C40",
+            "required": list(required_c40)
+        }))
 
     # ============================================================
-    # 2. Grade A41 formula
+    # Grade A41 formula (Celsius to Fahrenheit)
     # ============================================================
-
-    a41_has_formula = isinstance(a41, str) and a41.startswith("=") and "*" in a41
+    
+    # Check if it's a formula with multiplication
+    a41_has_formula = a41_is_formula and isinstance(a41, str) and "*" in a41
+    # Check if formula has all required components
     a41_has_refs = a41_has_formula and all(fragment in a41 for fragment in required_a41)
 
     if a41_has_refs:
-        # Full credit: formula with cell references
+        # Full credit: formula with correct cell references and conversion factor
         score += 2
         feedback.append(("UC_TEMP_A41_CORRECT", {"cell": "A41"}))
     elif a41_has_formula and _check_a41_calculated_value(sheet):
-        # Partial credit: formula without cell refs but correct value
+        # Partial credit: formula produces correct value but missing cell refs
         score += 1
         feedback.append(("UC_TEMP_A41_PARTIAL", {
             "cell": "A41", 
-            "note": "Formula produces correct value but missing cell reference (C41). Use cell references for full credit."
+            "note": "Formula produces correct value but missing cell reference (C41). "
+                    "Use cell references for full credit."
         }))
     else:
-        feedback.append(("UC_TEMP_A41_INCORRECT",
-                         {"cell": "A41", "required": list(required_a41)}))
+        # No credit
+        feedback.append(("UC_TEMP_A41_INCORRECT", {
+            "cell": "A41",
+            "required": list(required_a41)
+        }))
 
     # ============================================================
-    # 3. Clamp and return V2 structured output
+    # Return V2 structured output
     # ============================================================
-
     return {
-        "temp_and_celsius_score": min(score, 4),
+        "temp_and_celsius_score": min(score, 4),  # Cap at 4 points
         "temp_and_celsius_feedback": feedback
     }

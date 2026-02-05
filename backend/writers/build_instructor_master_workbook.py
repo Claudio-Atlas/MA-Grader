@@ -110,58 +110,66 @@ def build_instructor_master_workbook(
     if not grade_files:
         raise FileNotFoundError(f"No *_MA1_Grade.xlsx files found in: {graded_path}")
 
-    wb = load_workbook(template_path)
-
-    if SUMMARY_SHEET_NAME not in wb.sheetnames:
-        raise KeyError(f"Template missing sheet: {SUMMARY_SHEET_NAME}")
-
-    ws_summary = wb[SUMMARY_SHEET_NAME]
-    _ensure_summary_headers(ws_summary)
-
-    # Help Excel recalc links on open
+    wb = None
+    
     try:
-        wb.calculation.calcMode = "auto"
-        wb.calculation.fullCalcOnLoad = True
-    except Exception:
-        pass
+        wb = load_workbook(template_path)
 
-    row = SUMMARY_START_ROW
+        if SUMMARY_SHEET_NAME not in wb.sheetnames:
+            raise KeyError(f"Template missing sheet: {SUMMARY_SHEET_NAME}")
 
-    for full_grade_path in grade_files:
-        grade_filename = os.path.basename(full_grade_path)
-        student_base = grade_filename.replace("_MA1_Grade.xlsx", "")
+        ws_summary = wb[SUMMARY_SHEET_NAME]
+        _ensure_summary_headers(ws_summary)
 
-        # Name + hyperlink to the grade file
-        name_cell = f"{COL_NAME}{row}"
-        ws_summary[name_cell].value = student_base
-        ws_summary[name_cell].hyperlink = _xl_escape_path(full_grade_path)
+        # Help Excel recalc links on open
+        try:
+            wb.calculation.calcMode = "auto"
+            wb.calculation.fullCalcOnLoad = True
+        except Exception:
+            pass
 
-        # Auto Total (F24)
-        ws_summary[f"{COL_AUTO_TOTAL}{row}"].value = _external_link_formula_local(
-            grade_filename, ANCHOR_OVERALL
-        )
+        row = SUMMARY_START_ROW
 
-        # Manual Adj default 0
-        manual_cell = f"{COL_MANUAL_ADJ}{row}"
-        if ws_summary[manual_cell].value in (None, ""):
-            ws_summary[manual_cell].value = 0
+        for full_grade_path in grade_files:
+            grade_filename = os.path.basename(full_grade_path)
+            student_base = grade_filename.replace("_MA1_Grade.xlsx", "")
 
-        # Final Total = Auto + Manual
-        ws_summary[f"{COL_FINAL_TOTAL}{row}"].value = f"={COL_AUTO_TOTAL}{row}+{COL_MANUAL_ADJ}{row}"
+            # Name + hyperlink to the grade file
+            name_cell = f"{COL_NAME}{row}"
+            ws_summary[name_cell].value = student_base
+            ws_summary[name_cell].hyperlink = _xl_escape_path(full_grade_path)
 
-        # Section totals
-        ws_summary[f"{COL_INCOME_TOTAL}{row}"].value = _external_link_formula_local(
-            grade_filename, ANCHOR_INCOME
-        )
-        ws_summary[f"{COL_UNIT_TOTAL}{row}"].value = _external_link_formula_local(
-            grade_filename, ANCHOR_UNIT
-        )
-        ws_summary[f"{COL_CURRENCY_TOTAL}{row}"].value = _external_link_formula_local(
-            grade_filename, ANCHOR_CURRENCY
-        )
+            # Auto Total (F24)
+            ws_summary[f"{COL_AUTO_TOTAL}{row}"].value = _external_link_formula_local(
+                grade_filename, ANCHOR_OVERALL
+            )
 
-        row += 1
+            # Manual Adj default 0
+            manual_cell = f"{COL_MANUAL_ADJ}{row}"
+            if ws_summary[manual_cell].value in (None, ""):
+                ws_summary[manual_cell].value = 0
 
-    out_path = os.path.join(graded_path, output_filename)
-    wb.save(out_path)
-    return out_path
+            # Final Total = Auto + Manual
+            ws_summary[f"{COL_FINAL_TOTAL}{row}"].value = f"={COL_AUTO_TOTAL}{row}+{COL_MANUAL_ADJ}{row}"
+
+            # Section totals
+            ws_summary[f"{COL_INCOME_TOTAL}{row}"].value = _external_link_formula_local(
+                grade_filename, ANCHOR_INCOME
+            )
+            ws_summary[f"{COL_UNIT_TOTAL}{row}"].value = _external_link_formula_local(
+                grade_filename, ANCHOR_UNIT
+            )
+            ws_summary[f"{COL_CURRENCY_TOTAL}{row}"].value = _external_link_formula_local(
+                grade_filename, ANCHOR_CURRENCY
+            )
+
+            row += 1
+
+        out_path = os.path.join(graded_path, output_filename)
+        wb.save(out_path)
+        return out_path
+    
+    finally:
+        # Ensure workbook is always closed to prevent file locks and memory leaks
+        if wb is not None:
+            wb.close()
