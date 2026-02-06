@@ -34,9 +34,9 @@ class TestCheckScatterplotNoChart:
         ws = MagicMock()
         ws._charts = []
         
-        score, feedback = check_scatterplot(ws)
+        chart_score, trendline_score, feedback = check_scatterplot(ws)
         
-        assert score == 0.0
+        assert chart_score == 0.0 and trendline_score == 0.0
         assert any(code == "IA_SCATTER_NOT_FOUND" for code, _ in feedback)
     
     def test_only_non_scatter_charts(self):
@@ -48,9 +48,9 @@ class TestCheckScatterplotNoChart:
         non_scatter_chart = MagicMock()  # Not a ScatterChart instance
         ws._charts = [non_scatter_chart]
         
-        score, feedback = check_scatterplot(ws)
+        chart_score, trendline_score, feedback = check_scatterplot(ws)
         
-        assert score == 0.0
+        assert chart_score == 0.0 and trendline_score == 0.0
         assert any(code == "IA_SCATTER_NOT_FOUND" for code, _ in feedback)
 
 
@@ -79,10 +79,10 @@ class TestCheckScatterplotChartPresent:
         ws = MagicMock()
         ws._charts = [mock_scatter_chart]
         
-        score, feedback = check_scatterplot(ws)
+        chart_score, trendline_score, feedback = check_scatterplot(ws)
         
         # Should get 3 points just for having a scatter chart
-        assert score >= 3.0
+        assert chart_score >= 3.0
         assert any(code == "IA_SCATTER_FOUND" for code, _ in feedback)
 
 
@@ -113,10 +113,10 @@ class TestCheckScatterplotTitle:
         ws = MagicMock()
         ws._charts = [mock_scatter_chart]
         
-        score, feedback = check_scatterplot(ws)
+        chart_score, trendline_score, feedback = check_scatterplot(ws)
         
         # 3 (chart) + 1 (title) = 4
-        assert score >= 4.0
+        assert chart_score >= 4.0
         assert any(code == "IA_SCATTER_TITLE_PRESENT" for code, _ in feedback)
     
     def test_title_missing(self, mock_scatter_chart):
@@ -128,7 +128,7 @@ class TestCheckScatterplotTitle:
         ws = MagicMock()
         ws._charts = [mock_scatter_chart]
         
-        score, feedback = check_scatterplot(ws)
+        chart_score, trendline_score, feedback = check_scatterplot(ws)
         
         assert any(code == "IA_SCATTER_TITLE_MISSING" for code, _ in feedback)
     
@@ -141,7 +141,7 @@ class TestCheckScatterplotTitle:
         ws = MagicMock()
         ws._charts = [mock_scatter_chart]
         
-        score, feedback = check_scatterplot(ws)
+        chart_score, trendline_score, feedback = check_scatterplot(ws)
         
         assert any(code == "IA_SCATTER_TITLE_MISSING" for code, _ in feedback)
 
@@ -173,7 +173,7 @@ class TestCheckScatterplotAxisLabels:
         ws = MagicMock()
         ws._charts = [mock_scatter_chart]
         
-        score, feedback = check_scatterplot(ws)
+        chart_score, trendline_score, feedback = check_scatterplot(ws)
         
         assert any(code == "IA_SCATTER_XLABEL_PRESENT" for code, _ in feedback)
     
@@ -186,7 +186,7 @@ class TestCheckScatterplotAxisLabels:
         ws = MagicMock()
         ws._charts = [mock_scatter_chart]
         
-        score, feedback = check_scatterplot(ws)
+        chart_score, trendline_score, feedback = check_scatterplot(ws)
         
         assert any(code == "IA_SCATTER_XLABEL_MISSING" for code, _ in feedback)
     
@@ -199,7 +199,7 @@ class TestCheckScatterplotAxisLabels:
         ws = MagicMock()
         ws._charts = [mock_scatter_chart]
         
-        score, feedback = check_scatterplot(ws)
+        chart_score, trendline_score, feedback = check_scatterplot(ws)
         
         assert any(code == "IA_SCATTER_YLABEL_PRESENT" for code, _ in feedback)
     
@@ -212,7 +212,7 @@ class TestCheckScatterplotAxisLabels:
         ws = MagicMock()
         ws._charts = [mock_scatter_chart]
         
-        score, feedback = check_scatterplot(ws)
+        chart_score, trendline_score, feedback = check_scatterplot(ws)
         
         assert any(code == "IA_SCATTER_YLABEL_MISSING" for code, _ in feedback)
 
@@ -249,7 +249,7 @@ class TestCheckScatterplotTrendline:
         ws = MagicMock()
         ws._charts = [mock_scatter_chart]
         
-        score, feedback = check_scatterplot(ws)
+        chart_score, trendline_score, feedback = check_scatterplot(ws)
         
         assert any(code == "IA_SCATTER_TRENDLINE_PRESENT" for code, _ in feedback)
     
@@ -265,7 +265,7 @@ class TestCheckScatterplotTrendline:
         ws = MagicMock()
         ws._charts = [mock_scatter_chart]
         
-        score, feedback = check_scatterplot(ws)
+        chart_score, trendline_score, feedback = check_scatterplot(ws)
         
         assert any(code == "IA_SCATTER_TRENDLINE_MISSING" for code, _ in feedback)
     
@@ -278,7 +278,7 @@ class TestCheckScatterplotTrendline:
         ws = MagicMock()
         ws._charts = [mock_scatter_chart]
         
-        score, feedback = check_scatterplot(ws)
+        chart_score, trendline_score, feedback = check_scatterplot(ws)
         
         assert any(code == "IA_SCATTER_TRENDLINE_MISSING" for code, _ in feedback)
 
@@ -317,7 +317,7 @@ class TestCheckScatterplotExtension:
         ws = MagicMock()
         ws._charts = [mock_scatter_chart]
         
-        score, feedback = check_scatterplot(ws)
+        chart_score, trendline_score, feedback = check_scatterplot(ws)
         
         assert any(code == "IA_SCATTER_EXTENDED_CORRECT" for code, _ in feedback)
     
@@ -330,7 +330,7 @@ class TestCheckScatterplotExtension:
         ws = MagicMock()
         ws._charts = [mock_scatter_chart]
         
-        score, feedback = check_scatterplot(ws)
+        chart_score, trendline_score, feedback = check_scatterplot(ws)
         
         assert any(code == "IA_SCATTER_EXTENDED_CORRECT" for code, _ in feedback)
     
@@ -345,7 +345,7 @@ class TestCheckScatterplotExtension:
         ws = MagicMock()
         ws._charts = [mock_scatter_chart]
         
-        score, feedback = check_scatterplot(ws)
+        chart_score, trendline_score, feedback = check_scatterplot(ws)
         
         assert any(code == "IA_SCATTER_EXTENDED_MISSING" for code, _ in feedback)
 
@@ -379,10 +379,10 @@ class TestCheckScatterplotPerfectScore:
         ws = MagicMock()
         ws._charts = [chart]
         
-        score, feedback = check_scatterplot(ws)
+        chart_score, trendline_score, feedback = check_scatterplot(ws)
         
         # Should get full 8 points
-        assert score == 8.0
+        assert chart_score == 6.0 and trendline_score == 2.0
         
         # Should have all positive feedback codes
         codes = [code for code, _ in feedback]
@@ -404,7 +404,7 @@ class TestCheckScatterplotFeedbackFormat:
         ws = MagicMock()
         ws._charts = []
         
-        score, feedback = check_scatterplot(ws)
+        chart_score, trendline_score, feedback = check_scatterplot(ws)
         
         assert isinstance(feedback, list)
         for item in feedback:
@@ -422,7 +422,7 @@ class TestCheckScatterplotFeedbackFormat:
         ws = MagicMock()
         ws._charts = []
         
-        score, feedback = check_scatterplot(ws)
+        chart_score, trendline_score, feedback = check_scatterplot(ws)
         
         for code, _ in feedback:
             assert code.startswith("IA_SCATTER_"), f"Code '{code}' should start with 'IA_SCATTER_'"

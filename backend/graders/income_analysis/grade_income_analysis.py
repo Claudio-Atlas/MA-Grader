@@ -59,7 +59,8 @@ def grade_income_analysis(ws: Worksheet) -> Dict[str, Any]:
             - slope_feedback: List[Tuple[str, dict]]
             - predictions_score: float (0-7) - includes formulas + formatting
             - predictions_feedback: List[Tuple[str, dict]]
-            - scatterplot_score: float (0-8) - auto-graded chart elements
+            - scatterplot_chart_score: float (0-6) - chart + title + labels (F6)
+            - scatterplot_trendline_score: float (0-2) - trendline + extension (F7)
             - scatterplot_feedback: List[Tuple[str, dict]]
     
     Example:
@@ -121,19 +122,20 @@ def grade_income_analysis(ws: Worksheet) -> Dict[str, Any]:
     results["predictions_feedback"] = (pred_fb or []) + (pred_fmt_fb or [])
 
     # ============================================================
-    # Row 6: Scatterplot (auto-graded)
+    # Row 6 & 7: Scatterplot (auto-graded, split into two rows)
     # ============================================================
-    # Scatterplot grading checks:
+    # Row 6 (F6) - Chart & Labels (6 points):
     #   - XY-Scatterplot present with BLS data: 3 points
     #   - Chart title present: 1 point
     #   - X-axis label present: 1 point
     #   - Y-axis label present: 1 point
+    #
+    # Row 7 (F7) - Trendline (2 points):
     #   - Trendline added: 1 point
     #   - Trendline extended (8-24 years): 1 point
-    #
-    # Total: 8 points
-    scatter_score, scatter_fb = check_scatterplot(ws)
-    results["scatterplot_score"] = scatter_score
+    chart_labels_score, trendline_score, scatter_fb = check_scatterplot(ws)
+    results["scatterplot_chart_score"] = chart_labels_score  # F6 (0-6)
+    results["scatterplot_trendline_score"] = trendline_score  # F7 (0-2)
     results["scatterplot_feedback"] = scatter_fb
 
     return results

@@ -116,7 +116,8 @@ class TestRealFileGrading:
         assert "name_score" in results
         assert "slope_score" in results
         assert "predictions_score" in results
-        assert "scatterplot_score" in results
+        assert "scatterplot_chart_score" in results
+        assert "scatterplot_trendline_score" in results
         
         # Scores should be non-negative
         assert results["name_score"] >= 0

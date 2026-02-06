@@ -10,11 +10,16 @@ Purpose: Checks that students have created a proper XY scatter chart with:
 Author: Clayton Ragsdale
 Dependencies: openpyxl chart objects
 
-Grading Breakdown (8 points total):
-    - XY-Scatterplot of BLS data present: 3 points
-    - Appropriate title and axis labels: 3 points (1 each)
-    - Trendline added: 1 point
-    - Trendline extended (8 years left, 24 years right): 1 point
+Grading Breakdown (8 points total, split into two rows):
+    Row 6 (F6) - Chart & Labels (6 points):
+        - XY-Scatterplot of BLS data present: 3 points
+        - Appropriate title: 1 point
+        - X-axis label: 1 point
+        - Y-axis label: 1 point
+    
+    Row 7 (F7) - Trendline (2 points):
+        - Trendline added: 1 point
+        - Trendline extended (8 years left, 24 years right): 1 point
 """
 
 from typing import Tuple, List, Dict, Any, Optional
@@ -56,41 +61,40 @@ def _extract_text_from_title(title_obj) -> str:
     return ""
 
 
-def check_scatterplot(ws: Worksheet) -> Tuple[float, List[Tuple[str, Dict[str, Any]]]]:
+def check_scatterplot(ws: Worksheet) -> Tuple[float, float, List[Tuple[str, Dict[str, Any]]]]:
     """
     Check the scatterplot chart on the Income Analysis worksheet.
     
+    Returns TWO separate scores for the grading sheet:
+        - chart_labels_score (F6): Chart present + title + axis labels (0-6 pts)
+        - trendline_score (F7): Trendline + extension (0-2 pts)
+    
     Grading Logic:
-        1. Chart Present & Correct Type (3 points):
-           - 3 points: XY Scatter chart exists
-           - 0 points: No chart or wrong chart type
+        Chart & Labels (6 points for F6):
+            - 3 points: XY Scatter chart exists
+            - 1 point: Chart has a title
+            - 1 point: X-axis has a label
+            - 1 point: Y-axis has a label
         
-        2. Title and Labels (3 points):
-           - 1 point: Chart has a title
-           - 1 point: X-axis has a label
-           - 1 point: Y-axis has a label
-        
-        3. Trendline (1 point):
-           - 1 point: Any series has a trendline
-           - 0 points: No trendline found
-        
-        4. Trendline Extension (1 point):
-           - 1 point: X-axis range extends from ~8 to ~24 years
-           - 0 points: Axis not extended or wrong range
+        Trendline (2 points for F7):
+            - 1 point: Any series has a trendline
+            - 1 point: Trendline extended to cover prediction range
     
     Args:
         ws: The openpyxl Worksheet object for the Income Analysis tab
     
     Returns:
         Tuple of:
-            - score: float (0-8)
+            - chart_labels_score: float (0-6) for F6
+            - trendline_score: float (0-2) for F7
             - feedback: List of (code, params) tuples describing each check
     
     Example:
-        >>> score, feedback = check_scatterplot(worksheet)
-        >>> print(f"Scatterplot score: {score}/8")
+        >>> chart_score, trendline_score, feedback = check_scatterplot(worksheet)
+        >>> print(f"Chart & Labels: {chart_score}/6, Trendline: {trendline_score}/2")
     """
-    score = 0.0
+    chart_labels_score = 0.0  # For F6 (max 6)
+    trendline_score = 0.0     # For F7 (max 2)
     feedback: List[Tuple[str, Dict[str, Any]]] = []
     
     # ============================================================
@@ -111,64 +115,60 @@ def check_scatterplot(ws: Worksheet) -> Tuple[float, List[Tuple[str, Dict[str, A
         # No scatter chart found
         feedback.append(("IA_SCATTER_NOT_FOUND", {}))
         # Return early - can't check other criteria without a chart
-        return 0.0, feedback
+        return 0.0, 0.0, feedback
     
     # ============================================================
-    # Step 2: Chart Present - XY Scatter (3 points)
+    # Step 2: Chart Present - XY Scatter (3 points) → F6
     # ============================================================
     # If we got here, we found a scatter chart
-    score += 3.0
+    chart_labels_score += 3.0
     feedback.append(("IA_SCATTER_FOUND", {}))
     
     # ============================================================
-    # Step 3: Check Title (1 point)
+    # Step 3: Check Title (1 point) → F6
     # ============================================================
-    has_title = False
     title_text = _extract_text_from_title(scatter_chart.title)
     
     if title_text:
-        has_title = True
-        score += 1.0
+        chart_labels_score += 1.0
         feedback.append(("IA_SCATTER_TITLE_PRESENT", {"title": title_text}))
     else:
         feedback.append(("IA_SCATTER_TITLE_MISSING", {}))
     
     # ============================================================
-    # Step 4: Check X-Axis Label (1 point)
+    # Step 4: Check X-Axis Label (1 point) → F6
     # ============================================================
-    has_x_label = False
     x_axis = scatter_chart.x_axis
     
     if x_axis is not None:
         x_label = _extract_text_from_title(x_axis.title)
         
         if x_label:
-            has_x_label = True
-            score += 1.0
+            chart_labels_score += 1.0
             feedback.append(("IA_SCATTER_XLABEL_PRESENT", {"label": x_label}))
-    
-    if not has_x_label:
+        else:
+            feedback.append(("IA_SCATTER_XLABEL_MISSING", {}))
+    else:
         feedback.append(("IA_SCATTER_XLABEL_MISSING", {}))
     
     # ============================================================
-    # Step 5: Check Y-Axis Label (1 point)
+    # Step 5: Check Y-Axis Label (1 point) → F6
     # ============================================================
-    has_y_label = False
     y_axis = scatter_chart.y_axis
     
     if y_axis is not None:
         y_label = _extract_text_from_title(y_axis.title)
         
         if y_label:
-            has_y_label = True
-            score += 1.0
+            chart_labels_score += 1.0
             feedback.append(("IA_SCATTER_YLABEL_PRESENT", {"label": y_label}))
-    
-    if not has_y_label:
+        else:
+            feedback.append(("IA_SCATTER_YLABEL_MISSING", {}))
+    else:
         feedback.append(("IA_SCATTER_YLABEL_MISSING", {}))
     
     # ============================================================
-    # Step 6: Check Trendline (1 point)
+    # Step 6: Check Trendline (1 point) → F7
     # ============================================================
     has_trendline = False
     trendline_obj = None
@@ -181,13 +181,13 @@ def check_scatterplot(ws: Worksheet) -> Tuple[float, List[Tuple[str, Dict[str, A
             break
     
     if has_trendline:
-        score += 1.0
+        trendline_score += 1.0
         feedback.append(("IA_SCATTER_TRENDLINE_PRESENT", {}))
     else:
         feedback.append(("IA_SCATTER_TRENDLINE_MISSING", {}))
     
     # ============================================================
-    # Step 7: Check Trendline Extension (1 point)
+    # Step 7: Check Trendline Extension (1 point) → F7
     # ============================================================
     # The trendline should extend from 8 years (left) to 24 years (right)
     # This can be done via axis scaling OR trendline backward/forward properties
@@ -236,7 +236,7 @@ def check_scatterplot(ws: Worksheet) -> Tuple[float, List[Tuple[str, Dict[str, A
                 extension_correct = True
     
     if extension_correct:
-        score += 1.0
+        trendline_score += 1.0
         feedback.append(("IA_SCATTER_EXTENDED_CORRECT", {}))
     else:
         feedback.append(("IA_SCATTER_EXTENDED_MISSING", {
@@ -244,4 +244,4 @@ def check_scatterplot(ws: Worksheet) -> Tuple[float, List[Tuple[str, Dict[str, A
             "expected_max": 24
         }))
     
-    return score, feedback
+    return chart_labels_score, trendline_score, feedback

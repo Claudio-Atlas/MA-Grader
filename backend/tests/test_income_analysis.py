@@ -380,7 +380,7 @@ class TestGradeIncomeAnalysis:
         assert results["name_score"] == 1
         assert results["slope_score"] == 6 + 1  # 6 formulas + 1 formatting (if implemented)
         # Note: Actual score depends on formatting check implementation
-        assert results["scatterplot_score"] == 0  # Always manual
+        assert results["scatterplot_chart_score"] == 0  # Always manual
     
     def test_returns_all_keys(self, mock_worksheet):
         """Results should contain all expected keys."""
@@ -397,7 +397,8 @@ class TestGradeIncomeAnalysis:
         assert "slope_feedback" in results
         assert "predictions_score" in results
         assert "predictions_feedback" in results
-        assert "scatterplot_score" in results
+        assert "scatterplot_chart_score" in results
+        assert "scatterplot_trendline_score" in results
         assert "scatterplot_feedback" in results
     
     def test_scatterplot_no_chart_found(self, mock_worksheet):
@@ -407,7 +408,7 @@ class TestGradeIncomeAnalysis:
         results = grade_income_analysis(ws)
         
         # Mock worksheet has no charts, so score should be 0
-        assert results["scatterplot_score"] == 0
+        assert results["scatterplot_chart_score"] == 0
         # Should report that no scatter chart was found
         assert any(code == "IA_SCATTER_NOT_FOUND" for code, _ in results["scatterplot_feedback"])
     

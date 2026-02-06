@@ -24,6 +24,11 @@ def write_income_analysis_scores(grading_ws, ia_results):
     grading_ws["F5"] = ia_results.get("predictions_score", 0)
     grading_ws["G5"] = render_feedback(ia_results.get("predictions_feedback"), TAB)
 
-    # Row 6 - Scatterplot (auto-graded)
-    grading_ws["F6"] = ia_results.get("scatterplot_score", 0)
+    # Row 6 - Scatterplot Chart & Labels (6 points max)
+    grading_ws["F6"] = ia_results.get("scatterplot_chart_score", 0)
+    
+    # Row 7 - Scatterplot Trendline (2 points max)
+    grading_ws["F7"] = ia_results.get("scatterplot_trendline_score", 0)
+    
+    # Feedback goes in G6 (covers both rows)
     grading_ws["G6"] = render_feedback(ia_results.get("scatterplot_feedback"), TAB)
