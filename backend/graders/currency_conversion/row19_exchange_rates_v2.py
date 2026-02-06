@@ -1,20 +1,43 @@
 # graders/currency_conversion_v2/row19_exchange_rates_v2.py
 
 import requests
+import urllib3
+
+# Suppress InsecureRequestWarning when we need to bypass corporate proxy SSL
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
 def fetch_live_usd_rates():
     """
     Fetch live FX rates with USD as the base currency.
+    
+    Handles corporate proxy/firewall environments that perform SSL inspection
+    by falling back to verify=False if SSL verification fails.
+    
     Returns: (rates_dict, error_message_or_none)
     """
+    api_url = "https://open.er-api.com/v6/latest/USD"
+    
+    # First try with normal SSL verification
     try:
-        response = requests.get("https://open.er-api.com/v6/latest/USD", timeout=15)
+        response = requests.get(api_url, timeout=15, verify=True)
         response.raise_for_status()
         rates = response.json().get("rates", {})
         if not isinstance(rates, dict) or not rates:
             return {}, "API returned no rates."
         return rates, None
+    except requests.exceptions.SSLError:
+        # SSL error - likely corporate proxy doing SSL inspection
+        # Retry without SSL verification
+        try:
+            response = requests.get(api_url, timeout=15, verify=False)
+            response.raise_for_status()
+            rates = response.json().get("rates", {})
+            if not isinstance(rates, dict) or not rates:
+                return {}, "API returned no rates."
+            return rates, None
+        except Exception as e:
+            return {}, f"SSL bypass also failed: {str(e)}"
     except Exception as e:
         return {}, str(e)
 
