@@ -52,7 +52,14 @@ from pydantic import BaseModel
 import uvicorn
 
 # Add backend to path for imports
-sys.path.insert(0, str(Path(__file__).parent))
+# Handle PyInstaller bundled execution
+if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
+    # Running as PyInstaller bundle - use _MEIPASS for bundled data
+    bundle_dir = sys._MEIPASS
+    sys.path.insert(0, bundle_dir)
+else:
+    # Running as regular Python script
+    sys.path.insert(0, str(Path(__file__).parent))
 
 # ============ FastAPI Application Setup ============
 

@@ -1,6 +1,6 @@
 {
   "name": "ma-grader",
-  "version": "1.0.18",
+  "version": "1.0.19",
   "description": "MA Assignment Grader - Modern Desktop App",
   "main": "electron/main.js",
   "author": "Clayton Ragsdale",
