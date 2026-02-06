@@ -31,6 +31,9 @@ dist-electron/
 build/
 *.spec
 !backend/server.spec
+.coverage
+htmlcov/
+.pytest_cache/
 
 # Electron
 extraResources/
