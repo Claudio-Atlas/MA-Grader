@@ -30,5 +30,23 @@
   "IA_PRED_FORMAT_NONE_CORRECT": "None of the predicted income values in {range} are formatted correctly. These cells should be formatted as currency with 0 decimal places.",
   "IA_PRED_FORMAT_PARTIAL": "{correct} out of {total} predicted income values are formatted correctly as currency with 0 decimal places.",
 
-  "IA_SCATTER_NOT_CHECKED": "The scatterplot portion of the Income Analysis tab is not automatically graded and will be reviewed manually."
+  "IA_SCATTER_NOT_CHECKED": "The scatterplot portion of the Income Analysis tab is not automatically graded and will be reviewed manually.",
+
+  "IA_SCATTER_NOT_FOUND": "No XY scatter chart was found on the Income Analysis tab. Please create an XY scatter chart using the BLS income data.",
+  "IA_SCATTER_FOUND": "Your XY scatter chart is present and uses the correct chart type.",
+
+  "IA_SCATTER_TITLE_PRESENT": "Your chart has a title: \"{title}\"",
+  "IA_SCATTER_TITLE_MISSING": "Your chart is missing a title. Please add an appropriate title describing the data.",
+
+  "IA_SCATTER_XLABEL_PRESENT": "Your chart has an X-axis label: \"{label}\"",
+  "IA_SCATTER_XLABEL_MISSING": "Your chart is missing an X-axis label. Please add a label describing what the X-axis represents (e.g., Years of Experience).",
+
+  "IA_SCATTER_YLABEL_PRESENT": "Your chart has a Y-axis label: \"{label}\"",
+  "IA_SCATTER_YLABEL_MISSING": "Your chart is missing a Y-axis label. Please add a label describing what the Y-axis represents (e.g., Income).",
+
+  "IA_SCATTER_TRENDLINE_PRESENT": "Your chart has a trendline showing the linear relationship.",
+  "IA_SCATTER_TRENDLINE_MISSING": "Your chart is missing a trendline. Please add a linear trendline to show the relationship between the variables.",
+
+  "IA_SCATTER_EXTENDED_CORRECT": "Your trendline is properly extended to show predictions beyond the original data range.",
+  "IA_SCATTER_EXTENDED_MISSING": "Your trendline should be extended to show predictions from {expected_min} to {expected_max} years. Please extend the axis or trendline to show this range."
 }

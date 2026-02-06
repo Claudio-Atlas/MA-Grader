@@ -7,13 +7,17 @@ Purpose: Coordinates all grading checks for the Income Analysis worksheet tab.
 
 Author: Clayton Ragsdale
 Dependencies: check_name_present, check_slope_intercept, check_slope_intercept_formatting,
-              check_predictions, check_predictions_formatting
+              check_predictions, check_predictions_formatting, check_scatterplot
 
-Grading Breakdown (15 points total + scatterplot):
+Grading Breakdown (23 points total):
     - Row 3: Name present (1 point)
     - Row 4: Slope/Intercept formulas (6 points) + formatting (1 point) = 7 points
     - Row 5: Predictions formulas (6 points) + formatting (1 point) = 7 points
-    - Row 6: Scatterplot (manual grading - not auto-graded)
+    - Row 6: Scatterplot (8 points) - NOW AUTO-GRADED
+        - XY-Scatterplot present: 3 points
+        - Title and axis labels: 3 points
+        - Trendline: 1 point
+        - Trendline extended: 1 point
 """
 
 from typing import Dict, Any, List, Tuple
@@ -24,6 +28,7 @@ from .check_slope_intercept import check_slope_intercept
 from .check_slope_intercept_formatting import check_slope_intercept_formatting
 from .check_predictions import check_predictions
 from .check_predictions_formatting import check_currency_formatting
+from .check_scatterplot import check_scatterplot
 
 
 def grade_income_analysis(ws: Worksheet) -> Dict[str, Any]:
@@ -54,7 +59,7 @@ def grade_income_analysis(ws: Worksheet) -> Dict[str, Any]:
             - slope_feedback: List[Tuple[str, dict]]
             - predictions_score: float (0-7) - includes formulas + formatting
             - predictions_feedback: List[Tuple[str, dict]]
-            - scatterplot_score: int (always 0 - manual grading)
+            - scatterplot_score: float (0-8) - auto-graded chart elements
             - scatterplot_feedback: List[Tuple[str, dict]]
     
     Example:
@@ -116,12 +121,19 @@ def grade_income_analysis(ws: Worksheet) -> Dict[str, Any]:
     results["predictions_feedback"] = (pred_fb or []) + (pred_fmt_fb or [])
 
     # ============================================================
-    # Row 6: Scatterplot (manual grading)
+    # Row 6: Scatterplot (auto-graded)
     # ============================================================
-    # The scatterplot cannot be auto-graded because it requires visual
-    # inspection of chart elements (title, axis labels, trendline, etc.)
-    # We set score to 0 and provide feedback indicating manual review needed
-    results["scatterplot_score"] = 0
-    results["scatterplot_feedback"] = [("IA_SCATTER_NOT_CHECKED", {})]
+    # Scatterplot grading checks:
+    #   - XY-Scatterplot present with BLS data: 3 points
+    #   - Chart title present: 1 point
+    #   - X-axis label present: 1 point
+    #   - Y-axis label present: 1 point
+    #   - Trendline added: 1 point
+    #   - Trendline extended (8-24 years): 1 point
+    #
+    # Total: 8 points
+    scatter_score, scatter_fb = check_scatterplot(ws)
+    results["scatterplot_score"] = scatter_score
+    results["scatterplot_feedback"] = scatter_fb
 
     return results

@@ -400,14 +400,16 @@ class TestGradeIncomeAnalysis:
         assert "scatterplot_score" in results
         assert "scatterplot_feedback" in results
     
-    def test_scatterplot_always_manual(self, mock_worksheet):
-        """Scatterplot should always return 0 score (manual grading)."""
+    def test_scatterplot_no_chart_found(self, mock_worksheet):
+        """Scatterplot should return 0 when no chart is present."""
         ws = mock_worksheet
         
         results = grade_income_analysis(ws)
         
+        # Mock worksheet has no charts, so score should be 0
         assert results["scatterplot_score"] == 0
-        assert any(code == "IA_SCATTER_NOT_CHECKED" for code, _ in results["scatterplot_feedback"])
+        # Should report that no scatter chart was found
+        assert any(code == "IA_SCATTER_NOT_FOUND" for code, _ in results["scatterplot_feedback"])
     
     def test_feedback_format(self, mock_worksheet):
         """All feedback should be list of (code, params) tuples."""
