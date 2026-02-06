@@ -24,7 +24,6 @@ def write_income_analysis_scores(grading_ws, ia_results):
     grading_ws["F5"] = ia_results.get("predictions_score", 0)
     grading_ws["G5"] = render_feedback(ia_results.get("predictions_feedback"), TAB)
 
-    # Row 6 - Scatterplot (manual)
-    # If you still don't write row 6, keep these commented.
-    # grading_ws["F6"] = ia_results.get("scatterplot_score", 0)
-    # grading_ws["G6"] = render_feedback(ia_results.get("scatterplot_feedback"), TAB)
+    # Row 6 - Scatterplot (auto-graded)
+    grading_ws["F6"] = ia_results.get("scatterplot_score", 0)
+    grading_ws["G6"] = render_feedback(ia_results.get("scatterplot_feedback"), TAB)
