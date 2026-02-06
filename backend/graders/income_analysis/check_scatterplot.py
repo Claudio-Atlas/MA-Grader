@@ -18,9 +18,42 @@ Grading Breakdown (8 points total):
 """
 
 from typing import Tuple, List, Dict, Any, Optional
+import re
 from openpyxl.worksheet.worksheet import Worksheet
 from openpyxl.chart import ScatterChart
 from openpyxl.chart.series import XYSeries
+
+
+def _extract_text_from_title(title_obj) -> str:
+    """
+    Extract plain text from an openpyxl chart title or axis title object.
+    
+    The title can be a simple string or a complex RichText object.
+    This function handles both cases and extracts the actual text content.
+    """
+    if title_obj is None:
+        return ""
+    
+    # If it's already a string, return it
+    if isinstance(title_obj, str):
+        return title_obj.strip()
+    
+    # Try to get text from RichText structure
+    # The text is typically in nested Paragraph -> RegularTextRun -> t attributes
+    title_str = str(title_obj)
+    
+    # Extract all t='...' values from the string representation
+    texts = re.findall(r"t='([^']*)'", title_str)
+    if texts:
+        # Join the text parts and clean up
+        result = ' '.join(t for t in texts if t.strip())
+        return result.strip()
+    
+    # Fallback: try common attributes
+    if hasattr(title_obj, 'text') and title_obj.text:
+        return str(title_obj.text).strip()
+    
+    return ""
 
 
 def check_scatterplot(ws: Worksheet) -> Tuple[float, List[Tuple[str, Dict[str, Any]]]]:
@@ -91,24 +124,13 @@ def check_scatterplot(ws: Worksheet) -> Tuple[float, List[Tuple[str, Dict[str, A
     # Step 3: Check Title (1 point)
     # ============================================================
     has_title = False
-    if scatter_chart.title is not None:
-        # Title can be a string or a RichText object
-        title_text = ""
-        if isinstance(scatter_chart.title, str):
-            title_text = scatter_chart.title.strip()
-        elif hasattr(scatter_chart.title, 'text'):
-            # RichText object
-            title_text = str(scatter_chart.title.text).strip() if scatter_chart.title.text else ""
-        else:
-            # Try to get string representation
-            title_text = str(scatter_chart.title).strip()
-        
-        if title_text:
-            has_title = True
-            score += 1.0
-            feedback.append(("IA_SCATTER_TITLE_PRESENT", {"title": title_text}))
+    title_text = _extract_text_from_title(scatter_chart.title)
     
-    if not has_title:
+    if title_text:
+        has_title = True
+        score += 1.0
+        feedback.append(("IA_SCATTER_TITLE_PRESENT", {"title": title_text}))
+    else:
         feedback.append(("IA_SCATTER_TITLE_MISSING", {}))
     
     # ============================================================
@@ -117,14 +139,8 @@ def check_scatterplot(ws: Worksheet) -> Tuple[float, List[Tuple[str, Dict[str, A
     has_x_label = False
     x_axis = scatter_chart.x_axis
     
-    if x_axis is not None and x_axis.title is not None:
-        x_label = ""
-        if isinstance(x_axis.title, str):
-            x_label = x_axis.title.strip()
-        elif hasattr(x_axis.title, 'text'):
-            x_label = str(x_axis.title.text).strip() if x_axis.title.text else ""
-        else:
-            x_label = str(x_axis.title).strip()
+    if x_axis is not None:
+        x_label = _extract_text_from_title(x_axis.title)
         
         if x_label:
             has_x_label = True
@@ -140,14 +156,8 @@ def check_scatterplot(ws: Worksheet) -> Tuple[float, List[Tuple[str, Dict[str, A
     has_y_label = False
     y_axis = scatter_chart.y_axis
     
-    if y_axis is not None and y_axis.title is not None:
-        y_label = ""
-        if isinstance(y_axis.title, str):
-            y_label = y_axis.title.strip()
-        elif hasattr(y_axis.title, 'text'):
-            y_label = str(y_axis.title.text).strip() if y_axis.title.text else ""
-        else:
-            y_label = str(y_axis.title).strip()
+    if y_axis is not None:
+        y_label = _extract_text_from_title(y_axis.title)
         
         if y_label:
             has_y_label = True
@@ -181,6 +191,11 @@ def check_scatterplot(ws: Worksheet) -> Tuple[float, List[Tuple[str, Dict[str, A
     # ============================================================
     # The trendline should extend from 8 years (left) to 24 years (right)
     # This can be done via axis scaling OR trendline backward/forward properties
+    #
+    # Based on real student data:
+    #   - X-data typically ranges from ~10-20 years of education
+    #   - Need to extend backward to 8 (about 2 years back)
+    #   - Need to extend forward to 24 (about 4 years forward)
     
     extension_correct = False
     
@@ -189,26 +204,35 @@ def check_scatterplot(ws: Worksheet) -> Tuple[float, List[Tuple[str, Dict[str, A
         backward = getattr(trendline_obj, 'backward', None)
         forward = getattr(trendline_obj, 'forward', None)
         
-        # Original data is years 1-8, we need to extend to show 8-24
-        # So we need backward extension to reach year 8 on left (not really needed if data starts at 1)
-        # And forward extension to reach year 24 (about 16 years forward from year 8)
-        # Actually, looking at the data: years of experience 1-8, predictions go to year 24
-        # So forward extension of ~16 years would be needed
+        # Student needs BOTH backward and forward extension
+        # Typical data is 10-20, so:
+        #   - backward >= 1 extends left toward year 8
+        #   - forward >= 1 extends right toward year 24
+        # Be generous: any non-zero extension in both directions counts
+        has_backward = backward is not None and backward >= 1
+        has_forward = forward is not None and forward >= 1
         
-        if forward is not None and forward >= 10:
-            # Forward extension of at least 10 years (generous threshold)
+        if has_backward and has_forward:
+            extension_correct = True
+        elif has_forward and forward >= 3:
+            # If only forward but it's substantial (reaches ~24), still count it
             extension_correct = True
     
-    # Method 2: Check axis scaling (min/max)
+    # Method 2: Check axis scaling (min/max) as fallback
     if not extension_correct and x_axis is not None:
         scaling = getattr(x_axis, 'scaling', None)
         if scaling is not None:
             x_min = getattr(scaling, 'min', None)
             x_max = getattr(scaling, 'max', None)
             
-            # Check if axis is extended to cover prediction range
-            # Allow some tolerance (8 or less on left, 24 or more on right)
-            if x_max is not None and x_max >= 20:
+            # Check if axis covers the expected prediction range
+            min_ok = x_min is not None and x_min <= 10
+            max_ok = x_max is not None and x_max >= 22
+            
+            if min_ok and max_ok:
+                extension_correct = True
+            elif max_ok:
+                # At least extended to show predictions on right
                 extension_correct = True
     
     if extension_correct:
