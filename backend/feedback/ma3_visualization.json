@@ -1,0 +1,76 @@
+{
+  "_comment": "MA3 Visualization Tab Feedback Messages - Instructors can edit these",
+
+  "BIN_ALL_CORRECT": "[OK] Bin table formulas are all correct (Min, Max, Width).",
+  "BIN_PARTIAL": "[!] Bin table: {correct}/3 formulas correct.",
+  "BIN_NONE_CORRECT": "[X] No correct bin table formulas found.",
+
+  "BIN_MIN_OK": "[ok] E22: Bin Min formula correct (uses MIN function).",
+  "BIN_MIN_WRONG": "[x] E22: Bin Min formula incorrect. Expected MIN function referencing difference data.",
+  "BIN_MIN_MISSING": "[x] E22: Bin Min formula missing.",
+
+  "BIN_MAX_OK": "[ok] E23: Bin Max formula correct (uses MAX function).",
+  "BIN_MAX_WRONG": "[x] E23: Bin Max formula incorrect. Expected MAX function referencing difference data.",
+  "BIN_MAX_MISSING": "[x] E23: Bin Max formula missing.",
+
+  "BIN_WIDTH_OK": "[ok] E24: Bin Width formula correct.",
+  "BIN_WIDTH_WRONG": "[x] E24: Bin Width formula incorrect. Expected (Max-Min)/number_of_bins calculation.",
+  "BIN_WIDTH_MISSING": "[x] E24: Bin Width formula missing.",
+
+  "FREQ_LIMITS_ALL_CORRECT": "[OK] All Lower Limit and Upper Limit formulas are correct.",
+  "FREQ_LIMITS_PARTIAL": "[!] Lower/Upper Limits: {correct}/{total} formulas correct.",
+  "FREQ_LIMITS_NONE_CORRECT": "[X] No correct Lower/Upper Limit formulas found.",
+
+  "FREQ_LOWER_OK": "[ok] {cell}: Lower Limit formula correct.",
+  "FREQ_LOWER_WRONG": "[x] {cell}: Lower Limit formula incorrect.",
+  "FREQ_LOWER_MISSING": "[x] {cell}: Lower Limit formula missing.",
+
+  "FREQ_UPPER_OK": "[ok] {cell}: Upper Limit formula correct.",
+  "FREQ_UPPER_WRONG": "[x] {cell}: Upper Limit formula incorrect. Expected previous upper limit + bin width.",
+  "FREQ_UPPER_MISSING": "[x] {cell}: Upper Limit formula missing.",
+
+  "FREQ_DIST_ALL_CORRECT": "[OK] All Title of Bin, Frequency, and Relative Frequency formulas are correct.",
+  "FREQ_DIST_PARTIAL": "[!] Frequency Distribution: {correct}/{total} formulas correct.",
+  "FREQ_DIST_NONE_CORRECT": "[X] No correct Frequency Distribution formulas found.",
+
+  "FREQ_TITLE_OK": "[ok] {cell}: Title of Bin formula correct (midpoint calculation).",
+  "FREQ_TITLE_WRONG": "[x] {cell}: Title of Bin formula incorrect. Expected (Lower+Upper)/2.",
+  "FREQ_TITLE_MISSING": "[x] {cell}: Title of Bin formula missing.",
+
+  "FREQ_COUNT_OK": "[ok] {cell}: Frequency formula correct.",
+  "FREQ_COUNT_WRONG": "[x] {cell}: Frequency formula incorrect. Expected COUNTIF, COUNTIFS, or FREQUENCY function.",
+  "FREQ_COUNT_MISSING": "[x] {cell}: Frequency formula missing.",
+
+  "FREQ_REL_OK": "[ok] {cell}: Relative Frequency formula correct.",
+  "FREQ_REL_WRONG": "[x] {cell}: Relative Frequency formula incorrect. Expected frequency/total calculation.",
+  "FREQ_REL_MISSING": "[x] {cell}: Relative Frequency formula missing.",
+
+  "HIST_ALL_CORRECT": "[OK] Histogram is present with correct data, chart title, and axis titles.",
+  "HIST_PARTIAL": "[!] Histogram: {correct}/4 criteria met.",
+  "HIST_MISSING": "[X] No histogram/bar chart found on Visualization tab.",
+
+  "HIST_FOUND": "[ok] Bar chart found on Visualization tab.",
+  "HIST_WRONG_TYPE": "[x] Chart found but is not a bar chart type.",
+
+  "HIST_DATA_OK": "[ok] Chart uses correct data range for Frequency values.",
+  "HIST_DATA_WRONG": "[x] Chart data range incorrect. Expected Frequency column (G28:G38 or similar).",
+  "HIST_DATA_MISSING": "[x] Could not verify chart data range.",
+
+  "HIST_LABELS_OK": "[ok] Chart uses Title of Bin column for category labels.",
+  "HIST_LABELS_WRONG": "[x] Chart category labels incorrect. Expected Title of Bin column (F28:F38 or similar).",
+  "HIST_LABELS_MISSING": "[x] Chart category labels not found.",
+
+  "HIST_TITLE_OK": "[ok] Chart has a title: \"{title}\"",
+  "HIST_TITLE_MISSING": "[x] Chart is missing a title.",
+
+  "HIST_XAXIS_OK": "[ok] X-axis has a title: \"{title}\"",
+  "HIST_XAXIS_MISSING": "[x] X-axis is missing a title.",
+
+  "HIST_YAXIS_OK": "[ok] Y-axis has a title: \"{title}\"",
+  "HIST_YAXIS_MISSING": "[x] Y-axis is missing a title.",
+
+  "VIS_FORMAT_ALL_CORRECT": "[OK] All cells are formatted correctly.",
+  "VIS_FORMAT_PARTIAL": "[!] Formatting: {correct}/{total} cells formatted correctly.",
+  "VIS_FORMAT_CELL_OK": "[ok] {cell}: Formatted correctly.",
+  "VIS_FORMAT_CELL_WRONG": "[x] {cell}: Formatting incorrect."
+}

@@ -25,7 +25,7 @@ const API_BASE = 'http://127.0.0.1:8765';
 const ASSIGNMENTS = [
   { id: 'MA1', label: 'MA1 - Major Assignment 1', available: true },
   { id: 'MA2', label: 'MA2 - Major Assignment 2', available: false },
-  { id: 'MA3', label: 'MA3 - Major Assignment 3', available: false },
+  { id: 'MA3', label: 'MA3 - Major Assignment 3', available: true },
 ];
 
 // Pipeline steps for progress display

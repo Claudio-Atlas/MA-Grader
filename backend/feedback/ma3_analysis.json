@@ -1,0 +1,61 @@
+{
+  "_comment": "MA3 Analysis Tab Feedback Messages - Instructors can edit these",
+
+  "NAME_PRESENT": "[OK] Name correctly entered in B10: {name}",
+  "NAME_MISSING": "[X] Name is missing from cell B10.",
+  "NAME_TOO_SHORT": "[!] Name in B10 appears too short: '{name}'. Expected full name.",
+
+  "DIFF_ALL_CORRECT": "[OK] All 50 difference formulas (D14:D63) are correct.",
+  "DIFF_PARTIAL": "[!] Difference formulas: {correct}/50 correct.",
+  "DIFF_NONE_CORRECT": "[X] No correct difference formulas found in D14:D63.",
+  "DIFF_FORMULA_OK": "[ok] {cell}: Correct formula.",
+  "DIFF_FORMULA_MISSING": "[x] {cell}: Missing formula. Expected =C{row}-B{row}.",
+  "DIFF_FORMULA_WRONG": "[x] {cell}: Incorrect formula '{found}'. Expected =C{row}-B{row}.",
+  "DIFF_NOT_FORMULA": "[x] {cell}: Contains a value, not a formula.",
+
+  "STATS_ALL_CORRECT": "[OK] All 12 statistics formulas are correct.",
+  "STATS_PARTIAL": "[!] Statistics: {correct}/12 formulas correct.",
+  "STATS_NONE_CORRECT": "[X] No correct statistics formulas found.",
+
+  "STAT_MEAN_OK": "[ok] {cell}: Mean formula correct.",
+  "STAT_MEAN_WRONG": "[x] {cell}: Mean formula incorrect. Expected AVERAGE function.",
+  "STAT_MEAN_MISSING": "[x] {cell}: Mean formula missing.",
+
+  "STAT_MEDIAN_OK": "[ok] {cell}: Median formula correct.",
+  "STAT_MEDIAN_WRONG": "[x] {cell}: Median formula incorrect. Expected MEDIAN function.",
+  "STAT_MEDIAN_MISSING": "[x] {cell}: Median formula missing.",
+
+  "STAT_STDEV_OK": "[ok] {cell}: Standard deviation formula correct.",
+  "STAT_STDEV_WRONG": "[x] {cell}: Standard deviation formula incorrect. Expected STDEV, STDEV.P, or STDEV.S function.",
+  "STAT_STDEV_MISSING": "[x] {cell}: Standard deviation formula missing.",
+
+  "STAT_RANGE_OK": "[ok] {cell}: Range formula correct.",
+  "STAT_RANGE_WRONG": "[x] {cell}: Range formula incorrect. Expected MAX-MIN calculation.",
+  "STAT_RANGE_MISSING": "[x] {cell}: Range formula missing.",
+
+  "PERCENTILE_ALL_CORRECT": "[OK] Both percentile formulas are correct.",
+  "PERCENTILE_PARTIAL": "[!] Percentiles: {correct}/2 correct.",
+  "PERCENTILE_NONE_CORRECT": "[X] No correct percentile formulas found.",
+  "PERCENTILE_OK": "[ok] {cell}: Percentile formula correct.",
+  "PERCENTILE_WRONG": "[x] {cell}: Percentile formula incorrect. Expected PERCENTILE, PERCENTILE.INC, or PERCENTILE.EXC function.",
+  "PERCENTILE_MISSING": "[x] {cell}: Percentile formula missing.",
+
+  "EMPIRICAL_ALL_CORRECT": "[OK] Both empirical rule formulas are correct (lower and upper bounds).",
+  "EMPIRICAL_PARTIAL": "[!] Empirical rule: {correct}/2 bounds correct.",
+  "EMPIRICAL_NONE_CORRECT": "[X] No correct empirical rule formulas found.",
+  "EMPIRICAL_LOWER_OK": "[ok] {cell}: Lower bound formula correct (Mean - StdDev).",
+  "EMPIRICAL_LOWER_WRONG": "[x] {cell}: Lower bound formula incorrect. Expected =I18-I20 or equivalent.",
+  "EMPIRICAL_LOWER_MISSING": "[x] {cell}: Lower bound formula missing.",
+  "EMPIRICAL_UPPER_OK": "[ok] {cell}: Upper bound formula correct (Mean + StdDev).",
+  "EMPIRICAL_UPPER_WRONG": "[x] {cell}: Upper bound formula incorrect. Expected =I18+I20 or equivalent.",
+  "EMPIRICAL_UPPER_MISSING": "[x] {cell}: Upper bound formula missing.",
+
+  "WRITTEN_FOUND": "[Manual Review] Student's written analysis:\n\"{text}\"",
+  "WRITTEN_MISSING": "[X] Written analysis is missing from section 5b.",
+  "WRITTEN_TOO_SHORT": "[!] Written analysis appears too short ({length} characters). May need review.",
+
+  "FORMAT_ALL_CORRECT": "[OK] All cells are formatted correctly.",
+  "FORMAT_PARTIAL": "[!] Formatting: {correct}/{total} cells formatted correctly.",
+  "FORMAT_CELL_OK": "[ok] {cell}: Formatted correctly.",
+  "FORMAT_CELL_WRONG": "[x] {cell}: Should be formatted as Number with 2 decimal places."
+}

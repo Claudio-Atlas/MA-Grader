@@ -54,16 +54,20 @@ def _clean_name_parts_from_folder(folder_name: str):
     return first, last
 
 
-def create_grading_sheets_from_folder(course_label: str):
+def create_grading_sheets_from_folder(course_label: str, assignment_type: str = "MA1"):
     """
     Creates (INSIDE WORKSPACE):
         - A clean copy of each student's submission inside:
-              student_submissions/<course_label>/First_Last_MA1.xlsx
+              student_submissions/<course_label>/First_Last_{assignment_type}.xlsx
         - A grading sheet copy for each student inside:
-              graded_output/<course_label>/First_Last_MA1_Grade.xlsx
+              graded_output/<course_label>/First_Last_{assignment_type}_Grade.xlsx
 
     Source of raw folders (INSIDE WORKSPACE):
         student_groups/<course_label>/<student_folder>/
+
+    Args:
+        course_label: Course identifier (e.g., "MAT-144-501")
+        assignment_type: Type of assignment - "MA1" or "MA3"
 
     Returns:
         (graded_output_path, submissions_path)
@@ -71,8 +75,13 @@ def create_grading_sheets_from_folder(course_label: str):
     """
     logger = get_logger()
 
-    # [OK] Template now lives in the workspace templates folder
-    template_path = ws_path("templates", "Grading_Sheet_Template.xlsx")
+    # Select template based on assignment type
+    if assignment_type == "MA3":
+        template_name = "MA3_Grading_Sheet_Template.xlsx"
+    else:
+        template_name = "Grading_Sheet_Template.xlsx"
+    
+    template_path = ws_path("templates", template_name)
 
     # [OK] Course folders inside workspace
     student_groups_path = ensure_dir("student_groups", course_label)
@@ -112,8 +121,8 @@ def create_grading_sheets_from_folder(course_label: str):
             first_name, last_name = _clean_name_parts_from_folder(folder_name)
             readable_name = f"{first_name}_{last_name}"
 
-            submission_filename = f"{readable_name}_MA1.xlsx"
-            grading_filename = f"{readable_name}_MA1_Grade.xlsx"
+            submission_filename = f"{readable_name}_{assignment_type}.xlsx"
+            grading_filename = f"{readable_name}_{assignment_type}_Grade.xlsx"
 
             folder_path = os.path.join(student_groups_path, folder_name)
 

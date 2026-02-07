@@ -358,18 +358,25 @@ async def start_grading(
     })
     
     # Run pipeline in background so API remains responsive
-    background_tasks.add_task(run_pipeline_task, request.zip_path, request.course_label)
+    background_tasks.add_task(
+        run_pipeline_task, 
+        request.zip_path, 
+        request.course_label,
+        request.assignment_type
+    )
     
-    return {"status": "started", "message": "Pipeline started"}
+    return {"status": "started", "message": f"Pipeline started for {request.assignment_type}"}
 
 
-async def run_pipeline_task(zip_path: str, course_label: str) -> None:
+async def run_pipeline_task(zip_path: str, course_label: str, assignment_type: str = "MA1") -> None:
     """
-    Execute the full 8-step grading pipeline as a background task.
+    Execute the full grading pipeline as a background task.
     
     This function runs all grading steps sequentially, updating the
     pipeline_state as it progresses. Each step's output is captured
     and made available to the frontend for progress display.
+    
+    Routes to the appropriate graders/templates based on assignment_type.
     
     Pipeline Steps:
         1. Ensure workspace assets (templates, feedback files)
@@ -384,6 +391,7 @@ async def run_pipeline_task(zip_path: str, course_label: str) -> None:
     Args:
         zip_path: Absolute path to the student submissions ZIP file
         course_label: Course identifier (e.g., "MAT-144-501")
+        assignment_type: Type of assignment - "MA1" or "MA3"
     """
     # Capture stdout to collect all print statements for the frontend
     log_capture = LogCapture()
@@ -399,6 +407,7 @@ async def run_pipeline_task(zip_path: str, course_label: str) -> None:
         from writers.create_grading_sheet import create_grading_sheets_from_folder
         from orchestrator import (
             phase1_grade_all_students,
+            phase1_grade_all_students_ma3,
             phase2_export_all_charts,
             phase3_insert_all_charts,
             phase4_cleanup_temp
@@ -424,12 +433,17 @@ async def run_pipeline_task(zip_path: str, course_label: str) -> None:
         # Step 4: Create individual grading sheets from template
         pipeline_state["current_step"] = "Creating grading sheets..."
         pipeline_state["progress"] = 4
-        create_grading_sheets_from_folder(folder_safe)
+        # Pass assignment_type to use correct template
+        create_grading_sheets_from_folder(folder_safe, assignment_type=assignment_type)
         
         # Step 5: Grade all formula-based criteria
         pipeline_state["current_step"] = "Grading formulas..."
         pipeline_state["progress"] = 5
-        phase1_grade_all_students(submissions_path, graded_path, pipeline_state)
+        # Route to correct grader based on assignment type
+        if assignment_type == "MA3":
+            phase1_grade_all_students_ma3(submissions_path, graded_path, pipeline_state)
+        else:
+            phase1_grade_all_students(submissions_path, graded_path, pipeline_state)
         
         # Check for cancellation after grading phase
         if pipeline_state.get("cancel_requested"):
