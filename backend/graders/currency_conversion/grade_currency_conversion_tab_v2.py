@@ -33,7 +33,8 @@ from .row21_usd_conversion_back_v2 import grade_row21_usd_conversion_back_v2
 
 def grade_currency_conversion_tab_v2(
     sheet: Worksheet,
-    student_name: str
+    student_name: str,
+    values_sheet: Optional[Worksheet] = None
 ) -> Dict[str, Any]:
     """
     Currency Conversion V2 grading orchestrator.
@@ -140,7 +141,8 @@ def grade_currency_conversion_tab_v2(
     # Row 20: Budget Conversion Formulas (C20:F20)
     # ============================================================
     # Each cell should be =B4*{rate_cell} (e.g., =B4*C19)
-    score20_total, formula20, fmt20, fb20 = grade_row20_budget_conversion_v2(sheet)
+    # Pass values_sheet to verify calculated values are correct
+    score20_total, formula20, fmt20, fb20 = grade_row20_budget_conversion_v2(sheet, values_sheet)
     results["row20_formula_score"] = round(min(formula20, 8.0), 2)
     results["row20_format_score"] = round(max(0.0, fmt20), 2)
     results["row20_feedback"] = fb20
@@ -149,7 +151,8 @@ def grade_currency_conversion_tab_v2(
     # Row 21: USD Conversion Back Formulas (C21:F21)
     # ============================================================
     # Each cell should be =D4/{rate_cell} (e.g., =D4/C19)
-    score21_total, formula21, fmt21, fb21 = grade_row21_usd_conversion_back_v2(sheet)
+    # Pass values_sheet to verify calculated values are correct
+    score21_total, formula21, fmt21, fb21 = grade_row21_usd_conversion_back_v2(sheet, values_sheet)
     results["row21_formula_score"] = round(min(formula21, 8.0), 2)
     results["row21_format_score"] = round(max(0.0, fmt21), 2)
     results["row21_feedback"] = fb21

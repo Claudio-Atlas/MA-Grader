@@ -321,18 +321,22 @@ class TestCheckScatterplotExtension:
         
         assert any(code == "IA_SCATTER_EXTENDED_CORRECT" for code, _ in feedback)
     
-    def test_extension_via_axis_scaling(self, mock_scatter_chart):
-        """Should award point when axis max is extended."""
+    def test_extension_via_axis_scaling_alone_not_sufficient(self, mock_scatter_chart):
+        """Axis scaling alone should NOT award extension point - need trendline forward/backward."""
         from graders.income_analysis.check_scatterplot import check_scatterplot
         
+        # Only axis scaling, no trendline extension
         mock_scatter_chart.x_axis.scaling.max = 24
+        mock_scatter_chart.series[0].trendline.forward = 0  # No forward extension
+        mock_scatter_chart.series[0].trendline.backward = 0  # No backward extension
         
         ws = MagicMock()
         ws._charts = [mock_scatter_chart]
         
         chart_score, trendline_score, feedback = check_scatterplot(ws)
         
-        assert any(code == "IA_SCATTER_EXTENDED_CORRECT" for code, _ in feedback)
+        # Should NOT get extension credit with axis scaling alone
+        assert any(code == "IA_SCATTER_EXTENDED_MISSING" for code, _ in feedback)
     
     def test_extension_missing(self, mock_scatter_chart):
         """Should report missing extension."""

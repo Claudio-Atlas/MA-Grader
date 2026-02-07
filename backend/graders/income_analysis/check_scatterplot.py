@@ -29,6 +29,78 @@ from openpyxl.chart import ScatterChart
 from openpyxl.chart.series import XYSeries
 
 
+def _check_chart_data_source(scatter_chart) -> Tuple[bool, str]:
+    """
+    Check if the scatter chart uses the correct BLS data.
+    
+    The correct data should be from columns A (years of education) and B (income).
+    Typical range: A19:A26 for X values, B19:B26 for Y values.
+    
+    WRONG data would be using column E (predicted income) or column D (years for prediction).
+    
+    Returns:
+        Tuple of:
+            - bool: True if correct data is used, False if wrong data
+            - str: Description of what data was found
+    """
+    if scatter_chart is None or not hasattr(scatter_chart, 'series'):
+        return False, "No chart series found"
+    
+    for series in scatter_chart.series:
+        # Check X values (should be column A - years of education from BLS data)
+        x_ref = None
+        y_ref = None
+        
+        # Get X values reference
+        if hasattr(series, 'xVal') and series.xVal is not None:
+            if hasattr(series.xVal, 'numRef') and series.xVal.numRef is not None:
+                x_ref = getattr(series.xVal.numRef, 'f', None)
+        
+        # Get Y values reference  
+        if hasattr(series, 'yVal') and series.yVal is not None:
+            if hasattr(series.yVal, 'numRef') and series.yVal.numRef is not None:
+                y_ref = getattr(series.yVal.numRef, 'f', None)
+        
+        # Also try val attribute (alternative structure)
+        if hasattr(series, 'val') and series.val is not None:
+            if hasattr(series.val, 'numRef') and series.val.numRef is not None:
+                if y_ref is None:
+                    y_ref = getattr(series.val.numRef, 'f', None)
+        
+        # Analyze the references
+        # Correct X data: Column A (e.g., 'Income Analysis'!$A$19:$A$26)
+        # Correct Y data: Column B (e.g., 'Income Analysis'!$B$19:$B$26)
+        # WRONG Y data: Column E (predicted values)
+        
+        x_ref_str = str(x_ref).upper() if x_ref else ""
+        y_ref_str = str(y_ref).upper() if y_ref else ""
+        
+        # Check if Y data uses column E (predictions) - this is WRONG
+        if y_ref_str and ('$E$' in y_ref_str or ':E' in y_ref_str or 'E:' in y_ref_str or y_ref_str.endswith('E')):
+            return False, f"Chart uses predicted values (column E) instead of actual BLS data. Y-ref: {y_ref}"
+        
+        # Check if Y data uses column D (prediction years) - also WRONG  
+        if y_ref_str and ('$D$' in y_ref_str or ':D' in y_ref_str or 'D:' in y_ref_str):
+            # D could be years for predictions, not income data
+            # But D could also be legitimate in some layouts, so check X too
+            if x_ref_str and ('$E$' in x_ref_str or ':E' in x_ref_str):
+                return False, f"Chart uses prediction data instead of BLS data. X-ref: {x_ref}, Y-ref: {y_ref}"
+        
+        # Check if correct columns are used (A for X, B for Y)
+        x_uses_a = x_ref_str and ('$A$' in x_ref_str or ':A' in x_ref_str or 'A:' in x_ref_str)
+        y_uses_b = y_ref_str and ('$B$' in y_ref_str or ':B' in y_ref_str or 'B:' in y_ref_str)
+        
+        if x_uses_a and y_uses_b:
+            return True, f"Correct BLS data used. X-ref: {x_ref}, Y-ref: {y_ref}"
+        
+        # If we can't determine, check for column E explicitly as wrong
+        if '$E' in x_ref_str or '$E' in y_ref_str:
+            return False, f"Chart appears to use prediction column E. X-ref: {x_ref}, Y-ref: {y_ref}"
+    
+    # If we couldn't determine the data source, give benefit of doubt but note it
+    return True, "Could not verify data source - assuming correct"
+
+
 def _extract_text_from_title(title_obj) -> str:
     """
     Extract plain text from an openpyxl chart title or axis title object.
@@ -121,8 +193,24 @@ def check_scatterplot(ws: Worksheet) -> Tuple[float, float, List[Tuple[str, Dict
     # Step 2: Chart Present - XY Scatter (3 points) → F6
     # ============================================================
     # If we got here, we found a scatter chart
-    chart_labels_score += 3.0
-    feedback.append(("IA_SCATTER_FOUND", {}))
+    # But we need to verify it uses the CORRECT data (BLS data from columns A & B)
+    # NOT the predicted values from column E
+    
+    uses_correct_data, data_source_info = _check_chart_data_source(scatter_chart)
+    
+    if uses_correct_data:
+        # Full credit - correct BLS data used
+        chart_labels_score += 3.0
+        feedback.append(("IA_SCATTER_FOUND", {"data_source": "correct"}))
+    else:
+        # Partial credit (1/3) - chart exists but uses wrong data
+        chart_labels_score += 1.0
+        feedback.append(("IA_SCATTER_WRONG_DATA", {
+            "message": "Chart uses incorrect data. Should use BLS data (columns A & B), not predicted values.",
+            "detail": data_source_info,
+            "points_earned": 1.0,
+            "points_possible": 3.0
+        }))
     
     # ============================================================
     # Step 3: Check Title (1 point) → F6
@@ -190,58 +278,65 @@ def check_scatterplot(ws: Worksheet) -> Tuple[float, float, List[Tuple[str, Dict
     # Step 7: Check Trendline Extension (1 point) → F7
     # ============================================================
     # The trendline should extend from 8 years (left) to 24 years (right)
-    # This can be done via axis scaling OR trendline backward/forward properties
+    # This is done via trendline backward/forward properties in Excel
     #
     # Based on real student data:
     #   - X-data typically ranges from ~10-20 years of education
     #   - Need to extend backward to 8 (about 2 years back)
     #   - Need to extend forward to 24 (about 4 years forward)
+    #
+    # IMPORTANT: We must check that backward/forward are ACTUALLY set to non-zero values.
+    # Default values of None, 0, or 0.0 mean the trendline is NOT extended.
     
     extension_correct = False
+    backward_val = None
+    forward_val = None
     
-    # Method 1: Check trendline backward/forward extension
+    # Check trendline backward/forward extension
     if trendline_obj is not None:
         backward = getattr(trendline_obj, 'backward', None)
         forward = getattr(trendline_obj, 'forward', None)
         
-        # Student needs BOTH backward and forward extension
-        # Typical data is 10-20, so:
-        #   - backward >= 1 extends left toward year 8
-        #   - forward >= 1 extends right toward year 24
-        # Be generous: any non-zero extension in both directions counts
-        has_backward = backward is not None and backward >= 1
-        has_forward = forward is not None and forward >= 1
+        # Convert to float for comparison, treating None as 0
+        try:
+            backward_val = float(backward) if backward is not None else 0.0
+        except (ValueError, TypeError):
+            backward_val = 0.0
         
-        if has_backward and has_forward:
+        try:
+            forward_val = float(forward) if forward is not None else 0.0
+        except (ValueError, TypeError):
+            forward_val = 0.0
+        
+        # Student needs meaningful extension - at least 1 unit forward to show predictions
+        # The assignment specifically asks to extend the trendline to show predicted values
+        # Typical requirement: extend forward by at least 2-4 years to reach prediction range (20-24)
+        # Being reasonable: forward >= 2 shows intent to extend for predictions
+        has_meaningful_forward = forward_val >= 2.0
+        
+        # Backward extension is nice to have but not strictly required
+        # If they have backward, that's a bonus, but forward is what shows predictions
+        has_backward = backward_val >= 1.0
+        
+        # Primary check: must have forward extension to show predictions
+        if has_meaningful_forward:
             extension_correct = True
-        elif has_forward and forward >= 3:
-            # If only forward but it's substantial (reaches ~24), still count it
+        elif has_backward and forward_val >= 1.0:
+            # If they extended both ways but forward is small, still count it
             extension_correct = True
-    
-    # Method 2: Check axis scaling (min/max) as fallback
-    if not extension_correct and x_axis is not None:
-        scaling = getattr(x_axis, 'scaling', None)
-        if scaling is not None:
-            x_min = getattr(scaling, 'min', None)
-            x_max = getattr(scaling, 'max', None)
-            
-            # Check if axis covers the expected prediction range
-            min_ok = x_min is not None and x_min <= 10
-            max_ok = x_max is not None and x_max >= 22
-            
-            if min_ok and max_ok:
-                extension_correct = True
-            elif max_ok:
-                # At least extended to show predictions on right
-                extension_correct = True
     
     if extension_correct:
         trendline_score += 1.0
-        feedback.append(("IA_SCATTER_EXTENDED_CORRECT", {}))
+        feedback.append(("IA_SCATTER_EXTENDED_CORRECT", {
+            "backward": backward_val,
+            "forward": forward_val
+        }))
     else:
         feedback.append(("IA_SCATTER_EXTENDED_MISSING", {
             "expected_min": 8,
-            "expected_max": 24
+            "expected_max": 24,
+            "actual_backward": backward_val,
+            "actual_forward": forward_val
         }))
     
     return chart_labels_score, trendline_score, feedback

@@ -59,11 +59,13 @@ def grade_single_file(submission_path: str, graded_output_folder: str) -> dict:
 
     # --- Load workbooks ---
     student_wb = None
+    student_wb_values = None  # For getting calculated values
     grading_wb = None
     
     try:
         logger.debug(f"Loading submission: {submission_path}")
-        student_wb = load_workbook(submission_path, data_only=False)
+        student_wb = load_workbook(submission_path, data_only=False)  # For formulas
+        student_wb_values = load_workbook(submission_path, data_only=True)  # For calculated values
         
         logger.debug(f"Loading grading sheet: {grading_path}")
         grading_wb = load_workbook(grading_path)
@@ -125,7 +127,11 @@ def grade_single_file(submission_path: str, graded_output_folder: str) -> dict:
             try:
                 logger.debug("  Grading Currency Conversion...")
                 ws_currency = student_wb[sheet_map["Currency Conversion"]]
-                cc_results = grade_currency_conversion_tab_v2(ws_currency, student_name)
+                # Also get the values sheet for checking calculated results
+                ws_currency_values = None
+                if student_wb_values and sheet_map["Currency Conversion"] in student_wb_values.sheetnames:
+                    ws_currency_values = student_wb_values[sheet_map["Currency Conversion"]]
+                cc_results = grade_currency_conversion_tab_v2(ws_currency, student_name, ws_currency_values)
                 write_currency_conversion_results_v2(grading_ws, cc_results)
                 results_out["currency_conversion_v2"] = cc_results
                 logger.debug("  Currency Conversion complete")
@@ -144,5 +150,7 @@ def grade_single_file(submission_path: str, graded_output_folder: str) -> dict:
         # Ensure workbooks are always closed to prevent file locks and memory leaks
         if student_wb is not None:
             student_wb.close()
+        if student_wb_values is not None:
+            student_wb_values.close()
         if grading_wb is not None:
             grading_wb.close()

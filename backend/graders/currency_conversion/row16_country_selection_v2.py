@@ -1,11 +1,61 @@
 # graders/currency_conversion_v2/row16_country_selection_v2.py
 
+import re
 from graders.currency_conversion.currency_lookup import get_country_entry_by_name, country_currency_dict
 from graders.currency_conversion.utils import norm_unit
 
 
 # Build set of available first letters from country list
 AVAILABLE_LETTERS = set(name[0].lower() for name in country_currency_dict.keys())
+
+
+def _resolve_cell_value(sheet, cell_ref: str) -> str:
+    """
+    Get the displayed value of a cell, resolving simple cell references.
+    
+    If the cell contains a formula like '=F27', look up the referenced cell's value.
+    This handles students who link to the country list instead of typing directly.
+    
+    Args:
+        sheet: The openpyxl Worksheet object
+        cell_ref: Cell reference like 'C16'
+    
+    Returns:
+        The resolved string value of the cell
+    """
+    cell = sheet[cell_ref]
+    raw = cell.value
+    
+    if raw is None:
+        return ""
+    
+    # If it's not a string, convert it
+    if not isinstance(raw, str):
+        return str(raw).strip()
+    
+    raw = raw.strip()
+    
+    # Check if it's a simple cell reference formula (e.g., =F27, =$F$27)
+    # Country list is on the SAME tab, so no cross-sheet references needed
+    simple_ref_pattern = r'^=\$?([A-Za-z]+)\$?(\d+)$'
+    
+    match = re.match(simple_ref_pattern, raw)
+    if match:
+        # Simple reference like =F27 or =$F$27
+        col, row = match.groups()
+        ref_cell = f"{col.upper()}{row}"
+        ref_value = sheet[ref_cell].value
+        if ref_value is not None:
+            return str(ref_value).strip()
+        return ""
+    
+    # If it starts with = but isn't a simple reference, it's a complex formula
+    # In that case, return the formula as-is (will likely fail validation)
+    if raw.startswith("="):
+        return raw
+    
+    # Regular value, return as-is
+    return raw
 
 
 def _get_fallback_letter(expected_letter: str) -> str:
@@ -98,7 +148,8 @@ def grade_row16_country_selection_v2(sheet, student_name: str):
     matched_entries = {}
 
     for cell, expected_letter in zip(cells, expected_letters):
-        raw = sheet[cell].value
+        # Use _resolve_cell_value to handle cell references (e.g., =F27 linking to country list)
+        raw = _resolve_cell_value(sheet, cell)
         country_name = norm_unit(raw) if raw else ""
 
         if not country_name:
