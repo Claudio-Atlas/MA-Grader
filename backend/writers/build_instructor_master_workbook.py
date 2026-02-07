@@ -30,11 +30,12 @@ ANCHOR_CURRENCY = "$F$23"
 ANCHOR_OVERALL = "$F$24"
 
 
-def _grade_files_in_folder(graded_path: str) -> List[str]:
+def _grade_files_in_folder(graded_path: str, assignment_type: str = "MA1") -> List[str]:
     graded_path = os.path.abspath(graded_path)
+    suffix = f"_{assignment_type.lower()}_grade.xlsx"
     files = []
     for fn in os.listdir(graded_path):
-        if fn.lower().endswith("_ma1_grade.xlsx"):
+        if fn.lower().endswith(suffix):
             files.append(os.path.join(graded_path, fn))
     files.sort()
     return files
@@ -47,10 +48,10 @@ def _xl_escape_path(p: str) -> str:
 def _external_link_formula_local(grade_filename: str, cell_ref: str) -> str:
     """
     [OK] Relative link (BEST) because INSTRUCTOR_MASTER.xlsx is saved in the SAME folder
-    as all *_MA1_Grade.xlsx files.
+    as all *_{assignment_type}_Grade.xlsx files.
 
     Example:
-      ='[Adrian_Torres_MA1_Grade.xlsx]Grading Sheet'!$F$24
+      ='[Adrian_Torres_MA3_Grade.xlsx]Grading Sheet'!$F$24
 
     This avoids absolute-path link errors and "Manage Workbook Links" headaches.
     """
@@ -76,6 +77,7 @@ def build_instructor_master_workbook(
     graded_path: str,
     template_path: Optional[str] = None,
     output_filename: str = "INSTRUCTOR_MASTER.xlsx",
+    assignment_type: str = "MA1",
 ) -> str:
     """
     Builds a summary-only instructor master workbook.
@@ -86,6 +88,12 @@ def build_instructor_master_workbook(
 
     Saves into:
       graded_output/<course>/INSTRUCTOR_MASTER.xlsx
+
+    Args:
+        graded_path: Path to the graded output folder
+        template_path: Path to template (optional)
+        output_filename: Name for output file
+        assignment_type: Type of assignment - "MA1", "MA2", or "MA3"
 
     Returns: absolute path to created workbook
     """
@@ -106,9 +114,9 @@ def build_instructor_master_workbook(
             f"Place it here:\nDocuments/MA1_Autograder/templates/Template_Master.xlsx"
         )
 
-    grade_files = _grade_files_in_folder(graded_path)
+    grade_files = _grade_files_in_folder(graded_path, assignment_type)
     if not grade_files:
-        raise FileNotFoundError(f"No *_MA1_Grade.xlsx files found in: {graded_path}")
+        raise FileNotFoundError(f"No *_{assignment_type}_Grade.xlsx files found in: {graded_path}")
 
     wb = None
     
@@ -132,7 +140,13 @@ def build_instructor_master_workbook(
 
         for full_grade_path in grade_files:
             grade_filename = os.path.basename(full_grade_path)
-            student_base = grade_filename.replace("_MA1_Grade.xlsx", "")
+            # Remove the _{assignment_type}_Grade.xlsx suffix to get student name
+            suffix = f"_{assignment_type}_Grade.xlsx"
+            if grade_filename.endswith(suffix):
+                student_base = grade_filename[:-len(suffix)]
+            else:
+                # Fallback for case-insensitive match
+                student_base = grade_filename.rsplit("_", 2)[0]
 
             # Name + hyperlink to the grade file
             name_cell = f"{COL_NAME}{row}"

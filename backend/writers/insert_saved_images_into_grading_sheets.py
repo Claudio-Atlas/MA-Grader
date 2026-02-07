@@ -22,7 +22,19 @@ else:
     HAS_WIN32 = False
 
 
-def insert_images_into_grading_sheets(temp_chart_dir: str = None, graded_output_dir: str = None):
+def _detect_assignment_type(graded_output_dir: str) -> str:
+    """Detect assignment type from existing grading files in the folder."""
+    for fn in os.listdir(graded_output_dir):
+        fn_lower = fn.lower()
+        if fn_lower.endswith("_grade.xlsx"):
+            # Extract assignment type from filename like "Student_Name_MA3_Grade.xlsx"
+            for atype in ["MA1", "MA2", "MA3"]:
+                if f"_{atype.lower()}_grade.xlsx" in fn_lower:
+                    return atype
+    return "MA1"  # Default fallback
+
+
+def insert_images_into_grading_sheets(temp_chart_dir: str = None, graded_output_dir: str = None, assignment_type: str = None):
     """
     Inserts each PNG chart into the corresponding student's grading sheet.
     
@@ -32,6 +44,7 @@ def insert_images_into_grading_sheets(temp_chart_dir: str = None, graded_output_
     Args:
         temp_chart_dir: Directory containing exported chart images
         graded_output_dir: Directory containing grading sheets to insert into
+        assignment_type: Type of assignment (MA1, MA2, MA3) - auto-detected if not provided
     """
     logger = get_logger()
 
@@ -41,6 +54,10 @@ def insert_images_into_grading_sheets(temp_chart_dir: str = None, graded_output_
     # Default to workspace temp_charts
     temp_chart_dir = ensure_dir("temp_charts") if not temp_chart_dir else os.path.abspath(temp_chart_dir)
     graded_output_dir = os.path.abspath(graded_output_dir)
+    
+    # Auto-detect assignment type if not provided
+    if not assignment_type:
+        assignment_type = _detect_assignment_type(graded_output_dir)
 
     if not os.path.isdir(temp_chart_dir):
         logger.info(f"No temp_chart_dir found: {temp_chart_dir} (skipping image insertion)")
@@ -55,12 +72,12 @@ def insert_images_into_grading_sheets(temp_chart_dir: str = None, graded_output_
 
     # Use appropriate method based on platform
     if IS_WINDOWS and HAS_WIN32:
-        _insert_images_win32(temp_chart_dir, graded_output_dir, pngs)
+        _insert_images_win32(temp_chart_dir, graded_output_dir, pngs, assignment_type)
     else:
-        _insert_images_openpyxl(temp_chart_dir, graded_output_dir, pngs)
+        _insert_images_openpyxl(temp_chart_dir, graded_output_dir, pngs, assignment_type)
 
 
-def _insert_images_openpyxl(temp_chart_dir: str, graded_output_dir: str, pngs: list):
+def _insert_images_openpyxl(temp_chart_dir: str, graded_output_dir: str, pngs: list, assignment_type: str = "MA1"):
     """Insert images using openpyxl (cross-platform)."""
     logger = get_logger()
     
@@ -76,7 +93,7 @@ def _insert_images_openpyxl(temp_chart_dir: str, graded_output_dir: str, pngs: l
 
     for image_file in pngs:
         student_name = Path(image_file).stem
-        grading_file = os.path.join(graded_output_dir, f"{student_name}_MA1_Grade.xlsx")
+        grading_file = os.path.join(graded_output_dir, f"{student_name}_{assignment_type}_Grade.xlsx")
 
         if not os.path.exists(grading_file):
             logger.warning(f"No grading sheet for {student_name}")
@@ -109,7 +126,7 @@ def _insert_images_openpyxl(temp_chart_dir: str, graded_output_dir: str, pngs: l
     logger.info(f"Image insertion complete: {inserted_count} inserted, {error_count} errors")
 
 
-def _insert_images_win32(temp_chart_dir: str, graded_output_dir: str, pngs: list):
+def _insert_images_win32(temp_chart_dir: str, graded_output_dir: str, pngs: list, assignment_type: str = "MA1"):
     """Insert images using Windows COM automation."""
     logger = get_logger()
     
@@ -128,7 +145,7 @@ def _insert_images_win32(temp_chart_dir: str, graded_output_dir: str, pngs: list
 
             for image_file in pngs:
                 student_name = Path(image_file).stem
-                grading_file = os.path.join(graded_output_dir, f"{student_name}_MA1_Grade.xlsx")
+                grading_file = os.path.join(graded_output_dir, f"{student_name}_{assignment_type}_Grade.xlsx")
 
                 if not os.path.exists(grading_file):
                     logger.warning(f"No grading sheet for {student_name}")

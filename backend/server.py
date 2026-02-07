@@ -358,6 +358,7 @@ async def start_grading(
     })
     
     # Run pipeline in background so API remains responsive
+    print(f"[DEBUG] Starting pipeline with assignment_type: '{request.assignment_type}'")
     background_tasks.add_task(
         run_pipeline_task, 
         request.zip_path, 
@@ -474,7 +475,7 @@ async def run_pipeline_task(zip_path: str, course_label: str, assignment_type: s
         pipeline_state["progress"] = 8
         temp_charts_dir = ensure_dir("temp_charts")
         phase4_cleanup_temp(temp_charts_dir)
-        build_instructor_master_workbook(graded_path)
+        build_instructor_master_workbook(graded_path, assignment_type=assignment_type)
         
         # Pipeline completed successfully
         pipeline_state["status"] = "completed"
