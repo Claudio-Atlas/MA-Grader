@@ -93,14 +93,23 @@ def _check_median_formula(formula: str, col: str) -> bool:
 
 def _check_stdev_formula(formula: str, col: str) -> bool:
     """Check if formula uses STDEV, STDEV.P, or STDEV.S function."""
-    func = _extract_function_name(formula)
-    
-    # Accept any STDEV variant
-    valid_funcs = ["STDEV", "STDEV.P", "STDEV.S"]
-    if func not in valid_funcs:
+    if not formula or not formula.startswith("="):
         return False
     
     normalized = _normalize_formula(formula)
+    
+    # Handle negative prefix (some students use =-STDEV.S(...))
+    if normalized.startswith("=-"):
+        normalized = "=" + normalized[2:]
+    
+    func = _extract_function_name("=" + normalized[1:])  # Re-extract after removing negative
+    
+    # Also check directly in normalized string
+    has_stdev = any(f in normalized for f in ["STDEV(", "STDEV.P(", "STDEV.S("])
+    
+    if not has_stdev and func not in ["STDEV", "STDEV.P", "STDEV.S"]:
+        return False
+    
     col_map = {"G": "B", "H": "C", "I": "D"}
     expected_col = col_map.get(col, "")
     

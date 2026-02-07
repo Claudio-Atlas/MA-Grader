@@ -84,8 +84,11 @@ def _check_title_formula(formula: str, row: int) -> bool:
     
     normalized = _normalize_formula(formula)
     
+    # Remove dollar signs for easier matching
+    normalized_no_dollars = normalized.replace("$", "")
+    
     # Should have D{row}, E{row}, addition, and division by 2
-    if f"D{row}" in normalized and f"E{row}" in normalized:
+    if f"D{row}" in normalized_no_dollars and f"E{row}" in normalized_no_dollars:
         if "+" in normalized and "/2" in normalized:
             return True
         if "+" in normalized and "2" in normalized:

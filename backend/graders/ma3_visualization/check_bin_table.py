@@ -71,12 +71,15 @@ def _check_width_formula(formula: str) -> bool:
     
     normalized = _normalize_formula(formula)
     
+    # Remove dollar signs for easier matching
+    normalized_no_dollars = normalized.replace("$", "")
+    
     # Must have division
     if "/" not in normalized:
         return False
     
     # Should reference E22 and E23 (or calculate max-min)
-    if "E22" in normalized and "E23" in normalized:
+    if "E22" in normalized_no_dollars and "E23" in normalized_no_dollars:
         return True
     
     # Or reference the max/min cells with subtraction

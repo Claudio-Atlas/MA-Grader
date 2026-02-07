@@ -25,7 +25,8 @@ def _is_valid_difference_formula(formula: str, row: int) -> bool:
         =C14-B14
         =C14 - B14
         =$C$14-$B$14
-        =C14-B14  (with various spacing)
+        =SUM(C14-B14)  (equivalent result)
+        =(C14-B14)
     """
     if not formula or not formula.startswith("="):
         return False
@@ -40,6 +41,12 @@ def _is_valid_difference_formula(formula: str, row: int) -> bool:
         f"=C${row}-B${row}",
         f"=$C${row}-B{row}",
         f"=C{row}-$B${row}",
+        # Wrapped in parentheses
+        f"=(C{row}-B{row})",
+        f"=($C${row}-$B${row})",
+        # Wrapped in SUM (same result)
+        f"=SUM(C{row}-B{row})",
+        f"=SUM($C${row}-$B${row})",
     ]
     
     normalized_patterns = [_normalize_formula(p) for p in patterns]
