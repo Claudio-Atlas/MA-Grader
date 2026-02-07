@@ -9,11 +9,22 @@ Row 18:  Mean          Mean         Mean
 Row 19:  Median        Median       Median  
 Row 20:  StdDev        StdDev       StdDev
 Row 21:  Range         Range        Range
+
+Partial Credit Rules:
+- 50% if student uses comma instead of colon (e.g., =AVERAGE(B14,B63) instead of B14:B63)
+- 75% if range is slightly off (within 3 rows) due to drag-fill without absolute references
 """
 
 import re
-from typing import Tuple, List
+from typing import Tuple, List, Union
 from openpyxl.worksheet.worksheet import Worksheet
+
+
+# Partial credit multipliers
+CREDIT_FULL = 1.0
+CREDIT_RANGE_OFFSET = 0.75  # Range slightly off (drag-fill error)
+CREDIT_COMMA_NOT_COLON = 0.5  # Used comma instead of colon
+CREDIT_NONE = 0.0
 
 
 def _normalize_formula(formula: str) -> str:
@@ -43,37 +54,94 @@ def _extract_function_name(formula: str) -> str:
     return ""
 
 
-def _check_mean_formula(formula: str, col: str) -> bool:
-    """Check if formula uses AVERAGE function with correct range."""
-    func = _extract_function_name(formula)
-    if func != "AVERAGE":
-        return False
-    
+def _detect_comma_instead_of_colon(formula: str, expected_col: str) -> bool:
+    """
+    Detect if student used comma instead of colon for range.
+    e.g., =AVERAGE(B14,B63) instead of =AVERAGE(B14:B63)
+    """
     normalized = _normalize_formula(formula)
     
-    # Should reference the correct column (B, C, or D) rows 14-63
+    # Pattern: COL##,COL## (comma separating two cells that should be a range)
+    # Matches patterns like B14,B63 or $B$14,$B$63
+    comma_pattern = rf'\$?{expected_col}\$?\d+,\$?{expected_col}\$?\d+'
+    return bool(re.search(comma_pattern, normalized))
+
+
+def _detect_range_offset(formula: str, expected_col: str, expected_start: int, expected_end: int, tolerance: int = 3) -> bool:
+    """
+    Detect if student's range is slightly off (within tolerance rows).
+    Common when students drag formulas without absolute references.
+    
+    e.g., =AVERAGE(B15:B64) instead of =AVERAGE(B14:B63) — offset by 1 row
+    """
+    normalized = _normalize_formula(formula)
+    
+    # Extract range from formula: COL##:COL##
+    range_pattern = rf'\$?{expected_col}\$?(\d+):\$?{expected_col}\$?(\d+)'
+    match = re.search(range_pattern, normalized)
+    
+    if not match:
+        return False
+    
+    actual_start = int(match.group(1))
+    actual_end = int(match.group(2))
+    
+    # Check if both endpoints are within tolerance (but not exact)
+    start_offset = abs(actual_start - expected_start)
+    end_offset = abs(actual_end - expected_end)
+    
+    # If exact match, not an offset error (handled by full credit)
+    if start_offset == 0 and end_offset == 0:
+        return False
+    
+    # If within tolerance on both, it's a drag-fill error
+    return start_offset <= tolerance and end_offset <= tolerance
+
+
+def _check_mean_formula(formula: str, col: str) -> Union[float, str]:
+    """
+    Check if formula uses AVERAGE function with correct range.
+    Returns: score multiplier (1.0, 0.75, 0.5, 0.0) or error code string
+    """
+    func = _extract_function_name(formula)
+    if func != "AVERAGE":
+        return CREDIT_NONE
+    
+    normalized = _normalize_formula(formula)
     col_map = {"G": "B", "H": "C", "I": "D"}
     expected_col = col_map.get(col, "")
     
-    # Check for the data range pattern
+    # Check for the exact correct range pattern
     range_patterns = [
         f"{expected_col}14:{expected_col}63",
         f"${expected_col}$14:${expected_col}$63",
         f"${expected_col}14:${expected_col}63",
+        f"{expected_col}$14:{expected_col}$63",
     ]
     
     for pattern in range_patterns:
         if pattern in normalized:
-            return True
+            return CREDIT_FULL
     
-    return False
+    # Check for partial credit: comma instead of colon
+    if _detect_comma_instead_of_colon(formula, expected_col):
+        return CREDIT_COMMA_NOT_COLON
+    
+    # Check for partial credit: range slightly off
+    if _detect_range_offset(formula, expected_col, 14, 63):
+        return CREDIT_RANGE_OFFSET
+    
+    return CREDIT_NONE
 
 
-def _check_median_formula(formula: str, col: str) -> bool:
-    """Check if formula uses MEDIAN function with correct range."""
+def _check_median_formula(formula: str, col: str) -> float:
+    """
+    Check if formula uses MEDIAN function with correct range.
+    Returns: score multiplier (1.0, 0.75, 0.5, 0.0)
+    """
     func = _extract_function_name(formula)
     if func != "MEDIAN":
-        return False
+        return CREDIT_NONE
     
     normalized = _normalize_formula(formula)
     col_map = {"G": "B", "H": "C", "I": "D"}
@@ -82,19 +150,32 @@ def _check_median_formula(formula: str, col: str) -> bool:
     range_patterns = [
         f"{expected_col}14:{expected_col}63",
         f"${expected_col}$14:${expected_col}$63",
+        f"${expected_col}14:${expected_col}63",
+        f"{expected_col}$14:{expected_col}$63",
     ]
     
     for pattern in range_patterns:
         if pattern in normalized:
-            return True
+            return CREDIT_FULL
     
-    return False
+    # Check for partial credit: comma instead of colon
+    if _detect_comma_instead_of_colon(formula, expected_col):
+        return CREDIT_COMMA_NOT_COLON
+    
+    # Check for partial credit: range slightly off
+    if _detect_range_offset(formula, expected_col, 14, 63):
+        return CREDIT_RANGE_OFFSET
+    
+    return CREDIT_NONE
 
 
-def _check_stdev_formula(formula: str, col: str) -> bool:
-    """Check if formula uses STDEV, STDEV.P, or STDEV.S function."""
+def _check_stdev_formula(formula: str, col: str) -> float:
+    """
+    Check if formula uses STDEV, STDEV.P, or STDEV.S function.
+    Returns: score multiplier (1.0, 0.75, 0.5, 0.0)
+    """
     if not formula or not formula.startswith("="):
-        return False
+        return CREDIT_NONE
     
     normalized = _normalize_formula(formula)
     
@@ -108,7 +189,7 @@ def _check_stdev_formula(formula: str, col: str) -> bool:
     has_stdev = any(f in normalized for f in ["STDEV(", "STDEV.P(", "STDEV.S("])
     
     if not has_stdev and func not in ["STDEV", "STDEV.P", "STDEV.S"]:
-        return False
+        return CREDIT_NONE
     
     col_map = {"G": "B", "H": "C", "I": "D"}
     expected_col = col_map.get(col, "")
@@ -116,19 +197,32 @@ def _check_stdev_formula(formula: str, col: str) -> bool:
     range_patterns = [
         f"{expected_col}14:{expected_col}63",
         f"${expected_col}$14:${expected_col}$63",
+        f"${expected_col}14:${expected_col}63",
+        f"{expected_col}$14:{expected_col}$63",
     ]
     
     for pattern in range_patterns:
         if pattern in normalized:
-            return True
+            return CREDIT_FULL
     
-    return False
+    # Check for partial credit: comma instead of colon
+    if _detect_comma_instead_of_colon(formula, expected_col):
+        return CREDIT_COMMA_NOT_COLON
+    
+    # Check for partial credit: range slightly off
+    if _detect_range_offset(formula, expected_col, 14, 63):
+        return CREDIT_RANGE_OFFSET
+    
+    return CREDIT_NONE
 
 
-def _check_range_formula(formula: str, col: str) -> bool:
-    """Check if formula calculates MAX - MIN."""
+def _check_range_formula(formula: str, col: str) -> float:
+    """
+    Check if formula calculates MAX - MIN.
+    Returns: score multiplier (1.0, 0.75, 0.5, 0.0)
+    """
     if not formula or not formula.startswith("="):
-        return False
+        return CREDIT_NONE
     
     normalized = _normalize_formula(formula)
     col_map = {"G": "B", "H": "C", "I": "D"}
@@ -136,17 +230,37 @@ def _check_range_formula(formula: str, col: str) -> bool:
     
     # Must contain both MAX and MIN
     if "MAX(" not in normalized or "MIN(" not in normalized:
-        return False
+        return CREDIT_NONE
     
     # Must reference correct column
     if expected_col not in normalized:
-        return False
+        return CREDIT_NONE
     
     # Should have subtraction
     if "-" not in normalized:
-        return False
+        return CREDIT_NONE
     
-    return True
+    # Check for exact correct ranges in both MAX and MIN
+    correct_range_patterns = [
+        f"{expected_col}14:{expected_col}63",
+        f"${expected_col}$14:${expected_col}$63",
+    ]
+    
+    has_correct_range = any(pattern in normalized for pattern in correct_range_patterns)
+    
+    if has_correct_range:
+        return CREDIT_FULL
+    
+    # Check for comma instead of colon in MAX or MIN
+    if _detect_comma_instead_of_colon(formula, expected_col):
+        return CREDIT_COMMA_NOT_COLON
+    
+    # Check for range offset
+    if _detect_range_offset(formula, expected_col, 14, 63):
+        return CREDIT_RANGE_OFFSET
+    
+    # Has correct structure (MAX-MIN with right column) but wrong range
+    return CREDIT_NONE
 
 
 def check_statistics(sheet: Worksheet) -> Tuple[float, List[Tuple[str, dict]]]:
@@ -158,30 +272,38 @@ def check_statistics(sheet: Worksheet) -> Tuple[float, List[Tuple[str, dict]]]:
         
     Returns:
         Tuple of (score, feedback_list)
+        
+    Partial Credit:
+        - Full credit (100%): Correct function with correct range
+        - 75% credit: Correct function, range slightly off (drag-fill error)
+        - 50% credit: Correct function, used comma instead of colon
+        - 0% credit: Wrong function, missing, or completely wrong
     """
     feedback = []
-    correct_count = 0
+    total_score = 0.0
     total_cells = 12
     points_per_cell = 2.0
+    full_credit_count = 0
+    partial_credit_count = 0
     
     # Define the checks
     checks = [
-        # (row, col, stat_type, check_func, ok_code, wrong_code, missing_code)
-        (18, "G", "Mean", _check_mean_formula, "STAT_MEAN_OK", "STAT_MEAN_WRONG", "STAT_MEAN_MISSING"),
-        (18, "H", "Mean", _check_mean_formula, "STAT_MEAN_OK", "STAT_MEAN_WRONG", "STAT_MEAN_MISSING"),
-        (18, "I", "Mean", _check_mean_formula, "STAT_MEAN_OK", "STAT_MEAN_WRONG", "STAT_MEAN_MISSING"),
-        (19, "G", "Median", _check_median_formula, "STAT_MEDIAN_OK", "STAT_MEDIAN_WRONG", "STAT_MEDIAN_MISSING"),
-        (19, "H", "Median", _check_median_formula, "STAT_MEDIAN_OK", "STAT_MEDIAN_WRONG", "STAT_MEDIAN_MISSING"),
-        (19, "I", "Median", _check_median_formula, "STAT_MEDIAN_OK", "STAT_MEDIAN_WRONG", "STAT_MEDIAN_MISSING"),
-        (20, "G", "StdDev", _check_stdev_formula, "STAT_STDEV_OK", "STAT_STDEV_WRONG", "STAT_STDEV_MISSING"),
-        (20, "H", "StdDev", _check_stdev_formula, "STAT_STDEV_OK", "STAT_STDEV_WRONG", "STAT_STDEV_MISSING"),
-        (20, "I", "StdDev", _check_stdev_formula, "STAT_STDEV_OK", "STAT_STDEV_WRONG", "STAT_STDEV_MISSING"),
-        (21, "G", "Range", _check_range_formula, "STAT_RANGE_OK", "STAT_RANGE_WRONG", "STAT_RANGE_MISSING"),
-        (21, "H", "Range", _check_range_formula, "STAT_RANGE_OK", "STAT_RANGE_WRONG", "STAT_RANGE_MISSING"),
-        (21, "I", "Range", _check_range_formula, "STAT_RANGE_OK", "STAT_RANGE_WRONG", "STAT_RANGE_MISSING"),
+        # (row, col, stat_type, check_func, ok_code, partial_code, wrong_code, missing_code)
+        (18, "G", "Mean", _check_mean_formula, "STAT_MEAN_OK", "STAT_MEAN_PARTIAL", "STAT_MEAN_WRONG", "STAT_MEAN_MISSING"),
+        (18, "H", "Mean", _check_mean_formula, "STAT_MEAN_OK", "STAT_MEAN_PARTIAL", "STAT_MEAN_WRONG", "STAT_MEAN_MISSING"),
+        (18, "I", "Mean", _check_mean_formula, "STAT_MEAN_OK", "STAT_MEAN_PARTIAL", "STAT_MEAN_WRONG", "STAT_MEAN_MISSING"),
+        (19, "G", "Median", _check_median_formula, "STAT_MEDIAN_OK", "STAT_MEDIAN_PARTIAL", "STAT_MEDIAN_WRONG", "STAT_MEDIAN_MISSING"),
+        (19, "H", "Median", _check_median_formula, "STAT_MEDIAN_OK", "STAT_MEDIAN_PARTIAL", "STAT_MEDIAN_WRONG", "STAT_MEDIAN_MISSING"),
+        (19, "I", "Median", _check_median_formula, "STAT_MEDIAN_OK", "STAT_MEDIAN_PARTIAL", "STAT_MEDIAN_WRONG", "STAT_MEDIAN_MISSING"),
+        (20, "G", "StdDev", _check_stdev_formula, "STAT_STDEV_OK", "STAT_STDEV_PARTIAL", "STAT_STDEV_WRONG", "STAT_STDEV_MISSING"),
+        (20, "H", "StdDev", _check_stdev_formula, "STAT_STDEV_OK", "STAT_STDEV_PARTIAL", "STAT_STDEV_WRONG", "STAT_STDEV_MISSING"),
+        (20, "I", "StdDev", _check_stdev_formula, "STAT_STDEV_OK", "STAT_STDEV_PARTIAL", "STAT_STDEV_WRONG", "STAT_STDEV_MISSING"),
+        (21, "G", "Range", _check_range_formula, "STAT_RANGE_OK", "STAT_RANGE_PARTIAL", "STAT_RANGE_WRONG", "STAT_RANGE_MISSING"),
+        (21, "H", "Range", _check_range_formula, "STAT_RANGE_OK", "STAT_RANGE_PARTIAL", "STAT_RANGE_WRONG", "STAT_RANGE_MISSING"),
+        (21, "I", "Range", _check_range_formula, "STAT_RANGE_OK", "STAT_RANGE_PARTIAL", "STAT_RANGE_WRONG", "STAT_RANGE_MISSING"),
     ]
     
-    for row, col, stat_type, check_func, ok_code, wrong_code, missing_code in checks:
+    for row, col, stat_type, check_func, ok_code, partial_code, wrong_code, missing_code in checks:
         cell_ref = f"{col}{row}"
         cell = sheet[cell_ref]
         formula = cell.value
@@ -190,20 +312,49 @@ def check_statistics(sheet: Worksheet) -> Tuple[float, List[Tuple[str, dict]]]:
             feedback.append((missing_code, {"cell": cell_ref}))
         elif not isinstance(formula, str) or not formula.startswith("="):
             feedback.append((wrong_code, {"cell": cell_ref}))
-        elif check_func(formula, col):
-            correct_count += 1
         else:
-            feedback.append((wrong_code, {"cell": cell_ref}))
+            credit = check_func(formula, col)
+            
+            if credit == CREDIT_FULL:
+                total_score += points_per_cell
+                full_credit_count += 1
+            elif credit == CREDIT_RANGE_OFFSET:
+                # 75% credit for range slightly off (drag-fill without absolute refs)
+                total_score += points_per_cell * CREDIT_RANGE_OFFSET
+                partial_credit_count += 1
+                feedback.append((partial_code, {
+                    "cell": cell_ref, 
+                    "reason": "range_offset",
+                    "hint": "Range is slightly off - use absolute references ($) when copying formulas"
+                }))
+            elif credit == CREDIT_COMMA_NOT_COLON:
+                # 50% credit for comma instead of colon
+                total_score += points_per_cell * CREDIT_COMMA_NOT_COLON
+                partial_credit_count += 1
+                feedback.append((partial_code, {
+                    "cell": cell_ref,
+                    "reason": "comma_not_colon", 
+                    "hint": "Used comma instead of colon - B14,B63 only uses 2 cells, B14:B63 uses the full range"
+                }))
+            else:
+                feedback.append((wrong_code, {"cell": cell_ref}))
     
-    # Calculate score
-    score = round(correct_count * points_per_cell, 2)
+    # Round final score
+    score = round(total_score, 2)
     
     # Summary feedback
-    if correct_count == total_cells:
+    if full_credit_count == total_cells:
         feedback = [("STATS_ALL_CORRECT", {})]
-    elif correct_count == 0:
+    elif full_credit_count == 0 and partial_credit_count == 0:
         feedback.insert(0, ("STATS_NONE_CORRECT", {}))
+    elif partial_credit_count > 0:
+        feedback.insert(0, ("STATS_PARTIAL_CREDIT", {
+            "full_credit": full_credit_count,
+            "partial_credit": partial_credit_count,
+            "score": score,
+            "max_score": total_cells * points_per_cell
+        }))
     else:
-        feedback.insert(0, ("STATS_PARTIAL", {"correct": correct_count}))
+        feedback.insert(0, ("STATS_PARTIAL", {"correct": full_credit_count}))
     
     return score, feedback

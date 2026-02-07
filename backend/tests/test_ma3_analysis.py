@@ -145,32 +145,63 @@ class TestDifferenceFormula:
 # Statistics Formula Tests
 # ============================================================
 
+# Import partial credit constants
+from graders.ma3_analysis.check_statistics import (
+    CREDIT_FULL, CREDIT_RANGE_OFFSET, CREDIT_COMMA_NOT_COLON, CREDIT_NONE
+)
+
+
 class TestMeanFormula:
     """Tests for AVERAGE formula validation."""
     
     def test_basic_average_g(self):
         """AVERAGE for column G (Before data)."""
-        assert _check_mean_formula("=AVERAGE(B14:B63)", "G") is True
+        assert _check_mean_formula("=AVERAGE(B14:B63)", "G") == CREDIT_FULL
     
     def test_basic_average_h(self):
         """AVERAGE for column H (After data)."""
-        assert _check_mean_formula("=AVERAGE(C14:C63)", "H") is True
+        assert _check_mean_formula("=AVERAGE(C14:C63)", "H") == CREDIT_FULL
     
     def test_basic_average_i(self):
         """AVERAGE for column I (Difference data)."""
-        assert _check_mean_formula("=AVERAGE(D14:D63)", "I") is True
+        assert _check_mean_formula("=AVERAGE(D14:D63)", "I") == CREDIT_FULL
     
     def test_average_with_dollars(self):
         """AVERAGE with absolute references."""
-        assert _check_mean_formula("=AVERAGE($B$14:$B$63)", "G") is True
+        assert _check_mean_formula("=AVERAGE($B$14:$B$63)", "G") == CREDIT_FULL
     
     def test_average_wrong_range(self):
         """AVERAGE with wrong column should fail."""
-        assert _check_mean_formula("=AVERAGE(A14:A63)", "G") is False
+        assert _check_mean_formula("=AVERAGE(A14:A63)", "G") == CREDIT_NONE
     
     def test_not_average(self):
         """Non-AVERAGE function should fail."""
-        assert _check_mean_formula("=SUM(B14:B63)", "G") is False
+        assert _check_mean_formula("=SUM(B14:B63)", "G") == CREDIT_NONE
+    
+    # Partial credit tests
+    def test_average_comma_instead_of_colon(self):
+        """Using comma instead of colon should get 50% credit."""
+        assert _check_mean_formula("=AVERAGE(B14,B63)", "G") == CREDIT_COMMA_NOT_COLON
+    
+    def test_average_comma_with_dollars(self):
+        """Comma instead of colon with dollar signs."""
+        assert _check_mean_formula("=AVERAGE($B$14,$B$63)", "G") == CREDIT_COMMA_NOT_COLON
+    
+    def test_average_range_offset_by_1(self):
+        """Range off by 1 row (drag-fill error) should get 75% credit."""
+        assert _check_mean_formula("=AVERAGE(B15:B64)", "G") == CREDIT_RANGE_OFFSET
+    
+    def test_average_range_offset_by_2(self):
+        """Range off by 2 rows should get 75% credit."""
+        assert _check_mean_formula("=AVERAGE(B16:B65)", "G") == CREDIT_RANGE_OFFSET
+    
+    def test_average_range_offset_by_3(self):
+        """Range off by 3 rows should get 75% credit."""
+        assert _check_mean_formula("=AVERAGE(B17:B66)", "G") == CREDIT_RANGE_OFFSET
+    
+    def test_average_range_offset_too_far(self):
+        """Range off by more than 3 rows should get 0 credit."""
+        assert _check_mean_formula("=AVERAGE(B20:B69)", "G") == CREDIT_NONE
 
 
 class TestMedianFormula:
@@ -178,15 +209,24 @@ class TestMedianFormula:
     
     def test_basic_median(self):
         """Basic MEDIAN formula."""
-        assert _check_median_formula("=MEDIAN(B14:B63)", "G") is True
+        assert _check_median_formula("=MEDIAN(B14:B63)", "G") == CREDIT_FULL
     
     def test_median_with_dollars(self):
         """MEDIAN with absolute references."""
-        assert _check_median_formula("=MEDIAN($D$14:$D$63)", "I") is True
+        assert _check_median_formula("=MEDIAN($D$14:$D$63)", "I") == CREDIT_FULL
     
     def test_not_median(self):
         """Non-MEDIAN function should fail."""
-        assert _check_median_formula("=AVERAGE(B14:B63)", "G") is False
+        assert _check_median_formula("=AVERAGE(B14:B63)", "G") == CREDIT_NONE
+    
+    # Partial credit tests
+    def test_median_comma_instead_of_colon(self):
+        """Using comma instead of colon should get 50% credit."""
+        assert _check_median_formula("=MEDIAN(B14,B63)", "G") == CREDIT_COMMA_NOT_COLON
+    
+    def test_median_range_offset(self):
+        """Range off by 1 row should get 75% credit."""
+        assert _check_median_formula("=MEDIAN(B15:B64)", "G") == CREDIT_RANGE_OFFSET
 
 
 class TestStdevFormula:
@@ -194,31 +234,40 @@ class TestStdevFormula:
     
     def test_stdev_basic(self):
         """Basic STDEV formula."""
-        assert _check_stdev_formula("=STDEV(D14:D63)", "I") is True
+        assert _check_stdev_formula("=STDEV(D14:D63)", "I") == CREDIT_FULL
     
     def test_stdev_p(self):
         """STDEV.P formula."""
-        assert _check_stdev_formula("=STDEV.P(D14:D63)", "I") is True
+        assert _check_stdev_formula("=STDEV.P(D14:D63)", "I") == CREDIT_FULL
     
     def test_stdev_s(self):
         """STDEV.S formula."""
-        assert _check_stdev_formula("=STDEV.S(D14:D63)", "I") is True
+        assert _check_stdev_formula("=STDEV.S(D14:D63)", "I") == CREDIT_FULL
     
     def test_stdev_with_xlfn(self):
         """Excel internal format with _xlfn prefix."""
-        assert _check_stdev_formula("=_xlfn.STDEV.S(D14:D63)", "I") is True
+        assert _check_stdev_formula("=_xlfn.STDEV.S(D14:D63)", "I") == CREDIT_FULL
     
     def test_stdev_negative(self):
         """STDEV with negative sign prefix."""
-        assert _check_stdev_formula("=-STDEV.S(D14:D63)", "I") is True
+        assert _check_stdev_formula("=-STDEV.S(D14:D63)", "I") == CREDIT_FULL
     
     def test_stdev_negative_xlfn(self):
         """Negative STDEV with _xlfn prefix."""
-        assert _check_stdev_formula("=-_xlfn.STDEV.S(D14:D63)", "I") is True
+        assert _check_stdev_formula("=-_xlfn.STDEV.S(D14:D63)", "I") == CREDIT_FULL
     
     def test_stdev_wrong_column(self):
         """STDEV with wrong column reference."""
-        assert _check_stdev_formula("=STDEV.S(A14:A63)", "I") is False
+        assert _check_stdev_formula("=STDEV.S(A14:A63)", "I") == CREDIT_NONE
+    
+    # Partial credit tests
+    def test_stdev_comma_instead_of_colon(self):
+        """Using comma instead of colon should get 50% credit."""
+        assert _check_stdev_formula("=STDEV.S(D14,D63)", "I") == CREDIT_COMMA_NOT_COLON
+    
+    def test_stdev_range_offset(self):
+        """Range off by 1 row should get 75% credit."""
+        assert _check_stdev_formula("=STDEV.S(D15:D64)", "I") == CREDIT_RANGE_OFFSET
 
 
 class TestRangeFormula:
@@ -226,19 +275,28 @@ class TestRangeFormula:
     
     def test_basic_range(self):
         """Basic MAX-MIN formula."""
-        assert _check_range_formula("=MAX(B14:B63)-MIN(B14:B63)", "G") is True
+        assert _check_range_formula("=MAX(B14:B63)-MIN(B14:B63)", "G") == CREDIT_FULL
     
     def test_range_parentheses(self):
         """Range with parentheses."""
-        assert _check_range_formula("=(MAX(D14:D63)-MIN(D14:D63))", "I") is True
+        assert _check_range_formula("=(MAX(D14:D63)-MIN(D14:D63))", "I") == CREDIT_FULL
     
     def test_range_missing_max(self):
         """Formula without MAX should fail."""
-        assert _check_range_formula("=MIN(B14:B63)", "G") is False
+        assert _check_range_formula("=MIN(B14:B63)", "G") == CREDIT_NONE
     
     def test_range_missing_min(self):
         """Formula without MIN should fail."""
-        assert _check_range_formula("=MAX(B14:B63)", "G") is False
+        assert _check_range_formula("=MAX(B14:B63)", "G") == CREDIT_NONE
+    
+    # Partial credit tests
+    def test_range_comma_instead_of_colon(self):
+        """Using comma instead of colon in MAX-MIN should get 50% credit."""
+        assert _check_range_formula("=MAX(B14,B63)-MIN(B14,B63)", "G") == CREDIT_COMMA_NOT_COLON
+    
+    def test_range_offset(self):
+        """Range off by 1 row should get 75% credit."""
+        assert _check_range_formula("=MAX(B15:B64)-MIN(B15:B64)", "G") == CREDIT_RANGE_OFFSET
 
 
 # ============================================================
