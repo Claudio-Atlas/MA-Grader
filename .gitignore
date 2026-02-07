@@ -37,3 +37,4 @@ htmlcov/
 
 # Electron
 extraResources/
+test-data/
