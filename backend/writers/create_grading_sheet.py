@@ -92,7 +92,8 @@ def create_grading_sheets_from_folder(course_label: str, assignment_type: str = 
     if not os.path.exists(template_path):
         raise FileNotFoundError(
             f"[ERROR] Grading sheet template not found at:\n{template_path}\n\n"
-            f"Place it in Documents/MA1_Autograder/templates/Grading_Sheet_Template.xlsx"
+            f"Expected template: {template_name}\n"
+            f"Place it in Documents/MA1_Autograder/templates/{template_name}"
         )
 
     # ---- Validate student groups folder ----

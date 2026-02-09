@@ -2,9 +2,34 @@
 
 import json
 import os
+import sys
 from functools import lru_cache
 
 from utilities.paths import ensure_dir, ws_path
+
+
+def _get_bundled_path(*parts):
+    """
+    Get the path to bundled data files.
+    
+    Handles both development mode (files in project folder) and
+    PyInstaller bundled mode (files in sys._MEIPASS).
+    
+    Args:
+        *parts: Path components to join
+        
+    Returns:
+        str: Absolute path to the bundled file/folder
+    """
+    if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
+        # Running as PyInstaller bundle - data is in _MEIPASS
+        base_path = sys._MEIPASS
+    else:
+        # Running as regular Python script - data is in project root
+        # This file is in utilities/, so project root = one level up
+        base_path = os.path.dirname(os.path.dirname(__file__))
+    
+    return os.path.join(base_path, *parts)
 
 
 @lru_cache(maxsize=None)
@@ -28,16 +53,15 @@ def load_feedback(tab_name: str) -> dict:
         with open(workspace_path, "r", encoding="utf-8") as f:
             return json.load(f)
 
-    # 2) Default path (bundled with app / repo)
-    project_root = os.path.dirname(os.path.dirname(__file__))  # MA1_grader_beta/
-    default_path = os.path.join(project_root, "feedback", f"{tab_name}.json")
+    # 2) Default path (bundled with app or in repo)
+    default_path = _get_bundled_path("feedback", f"{tab_name}.json")
 
     if not os.path.exists(default_path):
         raise FileNotFoundError(
-            f"Feedback JSON not found.\n"
+            f"Feedback JSON not found for '{tab_name}'.\n"
             f"- Workspace expected: {workspace_path}\n"
-            f"- Default expected:   {default_path}\n"
-            f"Fix: ensure feedback/{tab_name}.json exists in your project."
+            f"- Bundled expected:   {default_path}\n"
+            f"Fix: ensure feedback/{tab_name}.json exists."
         )
 
     # Auto-copy defaults -> workspace so it's editable for instructors

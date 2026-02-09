@@ -24,6 +24,8 @@ else:
 
 def _detect_assignment_type(graded_output_dir: str) -> str:
     """Detect assignment type from existing grading files in the folder."""
+    if not os.path.isdir(graded_output_dir):
+        return "MA1"  # Default if directory doesn't exist
     for fn in os.listdir(graded_output_dir):
         fn_lower = fn.lower()
         if fn_lower.endswith("_grade.xlsx"):

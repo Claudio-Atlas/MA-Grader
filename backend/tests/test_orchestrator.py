@@ -247,12 +247,8 @@ class TestOrchestratorImports:
         """Should import all phases from __init__."""
         from orchestrator import (
             phase1_grade_all_students,
-            phase2_export_all_charts,
-            phase3_insert_all_charts,
-            phase4_cleanup_temp
+            phase1_grade_all_students_ma3,
         )
         
         assert callable(phase1_grade_all_students)
-        assert callable(phase2_export_all_charts)
-        assert callable(phase3_insert_all_charts)
-        assert callable(phase4_cleanup_temp)
+        assert callable(phase1_grade_all_students_ma3)

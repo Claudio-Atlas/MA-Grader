@@ -1,7 +1,33 @@
 import os
+import sys
 import shutil
 
 from utilities.paths import ensure_dir, ws_path
+
+
+def _get_bundled_path(*parts):
+    """
+    Get the path to bundled data files.
+    
+    Handles both development mode (files in project folder) and
+    PyInstaller bundled mode (files in sys._MEIPASS).
+    
+    Args:
+        *parts: Path components to join
+        
+    Returns:
+        str: Absolute path to the bundled file/folder
+    """
+    if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
+        # Running as PyInstaller bundle - data is in _MEIPASS
+        base_path = sys._MEIPASS
+    else:
+        # Running as regular Python script - data is in project root
+        # This file is in writers/, so project root = one level up
+        base_path = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+    
+    return os.path.join(base_path, *parts)
+
 
 def ensure_workspace_assets():
     """
@@ -15,11 +41,9 @@ def ensure_workspace_assets():
     ensure_dir("templates")
     ensure_dir("feedback")
 
-    # Source paths (relative to project folder or exe folder)
-    # This file is in writers/, so project root = one level up
-    project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-    src_templates_dir = os.path.join(project_root, "templates")
-    src_feedback_dir = os.path.join(project_root, "feedback")
+    # Source paths (handles both dev and PyInstaller bundled mode)
+    src_templates_dir = _get_bundled_path("templates")
+    src_feedback_dir = _get_bundled_path("feedback")
 
     # ===== TEMPLATES =====
     templates_to_copy = [

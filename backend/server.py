@@ -84,7 +84,7 @@ pipeline_state: Dict[str, Any] = {
     "cancel_requested": False,  # Flag for user-initiated cancellation
     "current_step": None,    # Human-readable description of current step
     "progress": 0,           # Current step number (1-8)
-    "total_steps": 8,        # Total number of pipeline steps
+    "total_steps": 6,        # Total number of pipeline steps
     "logs": [],              # List of log messages for the frontend
     "error": None,           # Error message if status is "error"
     "output_path": None,     # Path to graded output folder when complete
@@ -251,8 +251,8 @@ async def get_state() -> Dict[str, Any]:
         Dict containing:
         - status: Current pipeline status (idle/running/completed/error)
         - current_step: Description of the current step
-        - progress: Step number (1-8)
-        - total_steps: Total number of steps (8)
+        - progress: Step number (1-6)
+        - total_steps: Total number of steps (6)
         - logs: List of log messages
         - error: Error message if failed
         - output_path: Path to output folder when complete
@@ -384,10 +384,8 @@ async def run_pipeline_task(zip_path: str, course_label: str, assignment_type: s
         2. Create course folders (student_groups, graded_output, etc.)
         3. Import ZIP file into student_groups folder
         4. Create grading sheets from template for each student
-        5. Grade all students (formulas, not charts)
-        6. Export charts from student workbooks (Windows only)
-        7. Insert charts into grading sheets
-        8. Build instructor master workbook with summary
+        5. Grade all students (formulas)
+        6. Build instructor master workbook with summary
     
     Args:
         zip_path: Absolute path to the student submissions ZIP file
@@ -409,9 +407,6 @@ async def run_pipeline_task(zip_path: str, course_label: str, assignment_type: s
         from orchestrator import (
             phase1_grade_all_students,
             phase1_grade_all_students_ma3,
-            phase2_export_all_charts,
-            phase3_insert_all_charts,
-            phase4_cleanup_temp
         )
         from writers.build_instructor_master_workbook import build_instructor_master_workbook
         from utilities.paths import ensure_dir
@@ -453,28 +448,9 @@ async def run_pipeline_task(zip_path: str, course_label: str, assignment_type: s
             print("\n[CANCELLED] Pipeline cancelled by user after grading phase")
             return
         
-        # Step 6: Export charts from student workbooks (Windows only)
-        pipeline_state["current_step"] = "Exporting charts..."
-        pipeline_state["progress"] = 6
-        phase2_export_all_charts(submissions_path, pipeline_state)
-        
-        # Check for cancellation after chart export
-        if pipeline_state.get("cancel_requested"):
-            pipeline_state["status"] = "cancelled"
-            pipeline_state["current_step"] = "Cancelled"
-            print("\n[CANCELLED] Pipeline cancelled by user after chart export")
-            return
-        
-        # Step 7: Insert exported charts into grading sheets
-        pipeline_state["current_step"] = "Inserting charts into grading sheets..."
-        pipeline_state["progress"] = 7
-        phase3_insert_all_charts(graded_path)
-        
-        # Step 8: Build master summary workbook and cleanup
+        # Step 6: Build master summary workbook
         pipeline_state["current_step"] = "Building instructor master workbook..."
-        pipeline_state["progress"] = 8
-        temp_charts_dir = ensure_dir("temp_charts")
-        phase4_cleanup_temp(temp_charts_dir)
+        pipeline_state["progress"] = 6
         build_instructor_master_workbook(graded_path, assignment_type=assignment_type)
         
         # Pipeline completed successfully
