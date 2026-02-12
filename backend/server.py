@@ -435,10 +435,14 @@ async def run_pipeline_task(zip_path: str, course_label: str, assignment_type: s
         # Step 5: Grade all formula-based criteria
         pipeline_state["current_step"] = "Grading formulas..."
         pipeline_state["progress"] = 5
-        # Route to correct grader based on assignment type
-        if assignment_type == "MA3":
+        # Route to correct grader based on assignment type (case-insensitive)
+        assignment_upper = assignment_type.upper() if assignment_type else "MA1"
+        print(f"[DEBUG] Routing grader for assignment_type='{assignment_type}' -> '{assignment_upper}'")
+        if assignment_upper == "MA3":
+            print("[DEBUG] Using MA3 grader: phase1_grade_all_students_ma3")
             phase1_grade_all_students_ma3(submissions_path, graded_path, pipeline_state)
         else:
+            print(f"[DEBUG] Using MA1 grader: phase1_grade_all_students")
             phase1_grade_all_students(submissions_path, graded_path, pipeline_state)
         
         # Check for cancellation after grading phase

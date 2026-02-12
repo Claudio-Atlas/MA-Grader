@@ -75,12 +75,15 @@ def create_grading_sheets_from_folder(course_label: str, assignment_type: str = 
     """
     logger = get_logger()
 
-    # Select template based on assignment type
-    if assignment_type == "MA3":
+    # Select template based on assignment type (case-insensitive)
+    assignment_upper = assignment_type.upper() if assignment_type else "MA1"
+    print(f"[DEBUG] create_grading_sheets_from_folder called with assignment_type='{assignment_type}' -> '{assignment_upper}'")
+    if assignment_upper == "MA3":
         template_name = "MA3_Grading_Sheet_Template.xlsx"
     else:
         template_name = "Grading_Sheet_Template.xlsx"
     
+    print(f"[DEBUG] Using template: {template_name}")
     template_path = ws_path("templates", template_name)
 
     # [OK] Course folders inside workspace
