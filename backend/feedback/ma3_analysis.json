@@ -17,23 +17,28 @@
 
   "STATS_ALL_CORRECT": "[OK] All 12 statistics formulas are correct.",
   "STATS_PARTIAL": "[!] Statistics: {correct}/12 formulas correct.",
+  "STATS_PARTIAL_CREDIT": "[!] Statistics: {full_credit}/12 fully correct, {partial_credit} with partial credit. Score: {score}/{max_score}",
   "STATS_NONE_CORRECT": "[X] No correct statistics formulas found.",
 
   "STAT_MEAN_OK": "[ok] {cell}: Mean formula correct.",
   "STAT_MEAN_WRONG": "[x] {cell}: Mean formula incorrect. Expected AVERAGE function.",
   "STAT_MEAN_MISSING": "[x] {cell}: Mean formula missing.",
+  "STAT_MEAN_PARTIAL": "[~] {cell}: Partial credit - {hint}",
 
   "STAT_MEDIAN_OK": "[ok] {cell}: Median formula correct.",
   "STAT_MEDIAN_WRONG": "[x] {cell}: Median formula incorrect. Expected MEDIAN function.",
   "STAT_MEDIAN_MISSING": "[x] {cell}: Median formula missing.",
+  "STAT_MEDIAN_PARTIAL": "[~] {cell}: Partial credit - {hint}",
 
   "STAT_STDEV_OK": "[ok] {cell}: Standard deviation formula correct.",
   "STAT_STDEV_WRONG": "[x] {cell}: Standard deviation formula incorrect. Expected STDEV, STDEV.P, or STDEV.S function.",
   "STAT_STDEV_MISSING": "[x] {cell}: Standard deviation formula missing.",
+  "STAT_STDEV_PARTIAL": "[~] {cell}: Partial credit - {hint}",
 
   "STAT_RANGE_OK": "[ok] {cell}: Range formula correct.",
   "STAT_RANGE_WRONG": "[x] {cell}: Range formula incorrect. Expected MAX-MIN calculation.",
   "STAT_RANGE_MISSING": "[x] {cell}: Range formula missing.",
+  "STAT_RANGE_PARTIAL": "[~] {cell}: Partial credit - {hint}",
 
   "PERCENTILE_ALL_CORRECT": "[OK] Both percentile formulas are correct.",
   "PERCENTILE_PARTIAL": "[!] Percentiles: {correct}/2 correct.",
