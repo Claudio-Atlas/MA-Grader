@@ -22,8 +22,9 @@ from openpyxl.worksheet.worksheet import Worksheet
 
 # Partial credit multipliers
 CREDIT_FULL = 1.0
-CREDIT_RANGE_OFFSET = 0.75  # Range slightly off (drag-fill error)
-CREDIT_COMMA_NOT_COLON = 0.5  # Used comma instead of colon
+CREDIT_RANGE_OFFSET = 0.75  # Range slightly off (drag-fill error, within 3 rows)
+CREDIT_CORRECT_START = 0.50  # Correct function + correct start row, wrong end row
+CREDIT_COMMA_NOT_COLON = 0.51  # Used comma instead of colon (slightly different to distinguish)
 CREDIT_NONE = 0.0
 
 
@@ -114,6 +115,33 @@ def _detect_minus_instead_of_colon(formula: str, expected_col: str) -> bool:
     return bool(re.search(minus_pattern, normalized))
 
 
+def _detect_correct_start_wrong_end(formula: str, expected_col: str, expected_start: int, expected_end: int) -> bool:
+    """
+    Detect if student used correct start row but wrong end row.
+    e.g., =AVERAGE(B14:B31) instead of =AVERAGE(B14:B63)
+    
+    Student gets the function right and knows where the data starts,
+    but selected the wrong end point (common when data range isn't obvious).
+    """
+    normalized = _normalize_formula(formula)
+    
+    # Extract range from formula: COL##:COL##
+    range_pattern = rf'\$?{expected_col}\$?(\d+):\$?{expected_col}\$?(\d+)'
+    match = re.search(range_pattern, normalized)
+    
+    if not match:
+        return False
+    
+    actual_start = int(match.group(1))
+    actual_end = int(match.group(2))
+    
+    # Check if start is correct (or within 1 row) but end is significantly off
+    start_correct = abs(actual_start - expected_start) <= 1
+    end_wrong = abs(actual_end - expected_end) > 3  # More than drag-fill tolerance
+    
+    return start_correct and end_wrong
+
+
 def _detect_range_offset(formula: str, expected_col: str, expected_start: int, expected_end: int, tolerance: int = 3) -> bool:
     """
     Detect if student's range is slightly off (within tolerance rows).
@@ -178,9 +206,13 @@ def _check_mean_formula(formula: str, col: str) -> Union[float, str]:
     if _detect_comma_instead_of_colon(formula, expected_col) or _detect_minus_instead_of_colon(formula, expected_col):
         return CREDIT_COMMA_NOT_COLON
     
-    # Check for partial credit: range slightly off
+    # Check for partial credit: range slightly off (drag-fill error)
     if _detect_range_offset(formula, expected_col, 14, 63):
         return CREDIT_RANGE_OFFSET
+    
+    # Check for partial credit: correct start, wrong end (selected wrong range)
+    if _detect_correct_start_wrong_end(formula, expected_col, 14, 63):
+        return CREDIT_CORRECT_START
     
     return CREDIT_NONE
 
@@ -217,9 +249,13 @@ def _check_median_formula(formula: str, col: str) -> float:
     if _detect_comma_instead_of_colon(formula, expected_col) or _detect_minus_instead_of_colon(formula, expected_col):
         return CREDIT_COMMA_NOT_COLON
     
-    # Check for partial credit: range slightly off
+    # Check for partial credit: range slightly off (drag-fill error)
     if _detect_range_offset(formula, expected_col, 14, 63):
         return CREDIT_RANGE_OFFSET
+    
+    # Check for partial credit: correct start, wrong end (selected wrong range)
+    if _detect_correct_start_wrong_end(formula, expected_col, 14, 63):
+        return CREDIT_CORRECT_START
     
     return CREDIT_NONE
 
@@ -268,9 +304,13 @@ def _check_stdev_formula(formula: str, col: str) -> float:
     if _detect_comma_instead_of_colon(formula, expected_col) or _detect_minus_instead_of_colon(formula, expected_col):
         return CREDIT_COMMA_NOT_COLON
     
-    # Check for partial credit: range slightly off
+    # Check for partial credit: range slightly off (drag-fill error)
     if _detect_range_offset(formula, expected_col, 14, 63):
         return CREDIT_RANGE_OFFSET
+    
+    # Check for partial credit: correct start, wrong end (selected wrong range)
+    if _detect_correct_start_wrong_end(formula, expected_col, 14, 63):
+        return CREDIT_CORRECT_START
     
     return CREDIT_NONE
 
@@ -318,9 +358,13 @@ def _check_range_formula(formula: str, col: str) -> float:
     if _detect_comma_instead_of_colon(formula, expected_col) or _detect_minus_instead_of_colon(formula, expected_col):
         return CREDIT_COMMA_NOT_COLON
     
-    # Check for range offset
+    # Check for range offset (drag-fill error)
     if _detect_range_offset(formula, expected_col, 14, 63):
         return CREDIT_RANGE_OFFSET
+    
+    # Check for correct start, wrong end (selected wrong range)
+    if _detect_correct_start_wrong_end(formula, expected_col, 14, 63):
+        return CREDIT_CORRECT_START
     
     # Has correct structure (MAX-MIN with right column) but wrong range
     return CREDIT_NONE
@@ -398,6 +442,15 @@ def check_statistics(sheet: Worksheet) -> Tuple[float, List[Tuple[str, dict]]]:
                     "cell": cell_ref,
                     "reason": "comma_not_colon", 
                     "hint": "Used comma instead of colon - B14,B63 only uses 2 cells, B14:B63 uses the full range"
+                }))
+            elif credit == CREDIT_CORRECT_START:
+                # 50% credit for correct function and start row, but wrong end row
+                total_score += points_per_cell * CREDIT_CORRECT_START
+                partial_credit_count += 1
+                feedback.append((partial_code, {
+                    "cell": cell_ref,
+                    "reason": "wrong_end_row",
+                    "hint": "Correct function and start row, but data range should end at row 63"
                 }))
             else:
                 feedback.append((wrong_code, {"cell": cell_ref}))
