@@ -54,9 +54,45 @@ def _is_valid_difference_formula(formula: str, row: int) -> bool:
     return normalized in normalized_patterns
 
 
+def _is_valid_array_formula(formula_obj, start_row: int, end_row: int) -> bool:
+    """
+    Check if an ArrayFormula correctly calculates differences for the range.
+    
+    Excel 365 allows spill formulas like =C14:C63-B14:B63 in D14 that
+    automatically fills D14:D63.
+    """
+    from openpyxl.worksheet.formula import ArrayFormula
+    
+    if not isinstance(formula_obj, ArrayFormula):
+        return False
+    
+    # Get the formula text
+    formula_text = getattr(formula_obj, 'text', '')
+    if not formula_text:
+        return False
+    
+    normalized = _normalize_formula(formula_text)
+    
+    # Valid array formula patterns for difference calculation
+    # =C14:C63-B14:B63 or with $ signs
+    patterns = [
+        f"=C{start_row}:C{end_row}-B{start_row}:B{end_row}",
+        f"=$C${start_row}:$C${end_row}-$B${start_row}:$B${end_row}",
+        f"=$C{start_row}:$C{end_row}-$B{start_row}:$B{end_row}",
+    ]
+    
+    normalized_patterns = [_normalize_formula(p) for p in patterns]
+    
+    return normalized in normalized_patterns
+
+
 def check_differences(sheet: Worksheet) -> Tuple[float, List[Tuple[str, dict]]]:
     """
     Check difference formulas in D14:D63.
+    
+    Handles both:
+    - Individual formulas in each cell (=C14-B14, =C15-B15, etc.)
+    - Excel 365 spill/array formulas (=C14:C63-B14:B63 in D14 only)
     
     Args:
         sheet: Analysis worksheet
@@ -64,11 +100,30 @@ def check_differences(sheet: Worksheet) -> Tuple[float, List[Tuple[str, dict]]]:
     Returns:
         Tuple of (score, feedback_list)
     """
+    from openpyxl.worksheet.formula import ArrayFormula
+    
     feedback = []
     correct_count = 0
     total_cells = 50
     points_per_cell = 6.0 / total_cells  # 0.12 per cell
     
+    # First, check if D14 contains a valid array formula (Excel 365 spill)
+    d14_cell = sheet["D14"]
+    if isinstance(d14_cell.value, ArrayFormula):
+        if _is_valid_array_formula(d14_cell.value, 14, 63):
+            # Full credit - array formula covers entire range
+            return 6.0, [("DIFF_ALL_CORRECT_ARRAY", {
+                "formula": d14_cell.value.text
+            })]
+        else:
+            # Array formula exists but wrong formula
+            feedback.append(("DIFF_ARRAY_WRONG", {
+                "cell": "D14",
+                "found": d14_cell.value.text
+            }))
+            return 0.0, feedback
+    
+    # Standard check: individual formulas in each cell
     for row in range(14, 64):  # Rows 14-63
         cell = sheet[f"D{row}"]
         cell_ref = f"D{row}"
@@ -79,6 +134,9 @@ def check_differences(sheet: Worksheet) -> Tuple[float, List[Tuple[str, dict]]]:
         # Check if it's a formula
         if formula is None:
             feedback.append(("DIFF_FORMULA_MISSING", {"cell": cell_ref, "row": row}))
+        elif isinstance(formula, ArrayFormula):
+            # ArrayFormula in a cell other than D14 - likely a spill cell
+            feedback.append(("DIFF_NOT_FORMULA", {"cell": cell_ref}))
         elif not isinstance(formula, str) or not formula.startswith("="):
             feedback.append(("DIFF_NOT_FORMULA", {"cell": cell_ref}))
         elif _is_valid_difference_formula(formula, row):

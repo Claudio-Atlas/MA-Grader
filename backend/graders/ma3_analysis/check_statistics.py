@@ -54,6 +54,37 @@ def _extract_function_name(formula: str) -> str:
     return ""
 
 
+def _uses_anchorarray(formula: str, expected_anchor_col: str) -> bool:
+    """
+    Check if formula uses ANCHORARRAY to reference a spill range.
+    
+    Excel 365 uses _xlfn.ANCHORARRAY(D14) to reference a dynamic array
+    starting at D14. This is valid when the student used a spill formula
+    for the differences.
+    
+    Args:
+        formula: The formula string
+        expected_anchor_col: The expected column for the anchor (e.g., "D" for differences)
+    
+    Returns:
+        True if formula uses ANCHORARRAY correctly
+    """
+    if not formula:
+        return False
+    
+    normalized = _normalize_formula(formula)
+    
+    # Check for ANCHORARRAY pattern: _XLFN.ANCHORARRAY(D14) or ANCHORARRAY(D14)
+    patterns = [
+        f"_XLFN.ANCHORARRAY({expected_anchor_col}14)",
+        f"ANCHORARRAY({expected_anchor_col}14)",
+        f"_XLFN.ANCHORARRAY(${expected_anchor_col}$14)",
+        f"ANCHORARRAY(${expected_anchor_col}$14)",
+    ]
+    
+    return any(pattern in normalized for pattern in patterns)
+
+
 def _detect_comma_instead_of_colon(formula: str, expected_col: str) -> bool:
     """
     Detect if student used comma instead of colon for range.
@@ -65,6 +96,22 @@ def _detect_comma_instead_of_colon(formula: str, expected_col: str) -> bool:
     # Matches patterns like B14,B63 or $B$14,$B$63
     comma_pattern = rf'\$?{expected_col}\$?\d+,\$?{expected_col}\$?\d+'
     return bool(re.search(comma_pattern, normalized))
+
+
+def _detect_minus_instead_of_colon(formula: str, expected_col: str) -> bool:
+    """
+    Detect if student used minus instead of colon for range.
+    e.g., =STDEV.P(B14-B63) instead of =STDEV.P(B14:B63)
+    
+    This is a common typo where the student types - instead of : 
+    (they're on the same key on most keyboards).
+    """
+    normalized = _normalize_formula(formula)
+    
+    # Pattern: COL##-COL## inside a function (not as a subtraction operation)
+    # Look for pattern inside parentheses: FUNC(COL##-COL##)
+    minus_pattern = rf'\(\$?{expected_col}\$?\d+-\$?{expected_col}\$?\d+\)'
+    return bool(re.search(minus_pattern, normalized))
 
 
 def _detect_range_offset(formula: str, expected_col: str, expected_start: int, expected_end: int, tolerance: int = 3) -> bool:
@@ -111,6 +158,10 @@ def _check_mean_formula(formula: str, col: str) -> Union[float, str]:
     col_map = {"G": "B", "H": "C", "I": "D"}
     expected_col = col_map.get(col, "")
     
+    # Check for ANCHORARRAY (Excel 365 spill reference) - valid for column I (differences)
+    if col == "I" and _uses_anchorarray(formula, "D"):
+        return CREDIT_FULL
+    
     # Check for the exact correct range pattern
     range_patterns = [
         f"{expected_col}14:{expected_col}63",
@@ -123,8 +174,8 @@ def _check_mean_formula(formula: str, col: str) -> Union[float, str]:
         if pattern in normalized:
             return CREDIT_FULL
     
-    # Check for partial credit: comma instead of colon
-    if _detect_comma_instead_of_colon(formula, expected_col):
+    # Check for partial credit: comma or minus instead of colon
+    if _detect_comma_instead_of_colon(formula, expected_col) or _detect_minus_instead_of_colon(formula, expected_col):
         return CREDIT_COMMA_NOT_COLON
     
     # Check for partial credit: range slightly off
@@ -147,6 +198,10 @@ def _check_median_formula(formula: str, col: str) -> float:
     col_map = {"G": "B", "H": "C", "I": "D"}
     expected_col = col_map.get(col, "")
     
+    # Check for ANCHORARRAY (Excel 365 spill reference) - valid for column I (differences)
+    if col == "I" and _uses_anchorarray(formula, "D"):
+        return CREDIT_FULL
+    
     range_patterns = [
         f"{expected_col}14:{expected_col}63",
         f"${expected_col}$14:${expected_col}$63",
@@ -159,7 +214,7 @@ def _check_median_formula(formula: str, col: str) -> float:
             return CREDIT_FULL
     
     # Check for partial credit: comma instead of colon
-    if _detect_comma_instead_of_colon(formula, expected_col):
+    if _detect_comma_instead_of_colon(formula, expected_col) or _detect_minus_instead_of_colon(formula, expected_col):
         return CREDIT_COMMA_NOT_COLON
     
     # Check for partial credit: range slightly off
@@ -194,6 +249,10 @@ def _check_stdev_formula(formula: str, col: str) -> float:
     col_map = {"G": "B", "H": "C", "I": "D"}
     expected_col = col_map.get(col, "")
     
+    # Check for ANCHORARRAY (Excel 365 spill reference) - valid for column I (differences)
+    if col == "I" and _uses_anchorarray(formula, "D"):
+        return CREDIT_FULL
+    
     range_patterns = [
         f"{expected_col}14:{expected_col}63",
         f"${expected_col}$14:${expected_col}$63",
@@ -206,7 +265,7 @@ def _check_stdev_formula(formula: str, col: str) -> float:
             return CREDIT_FULL
     
     # Check for partial credit: comma instead of colon
-    if _detect_comma_instead_of_colon(formula, expected_col):
+    if _detect_comma_instead_of_colon(formula, expected_col) or _detect_minus_instead_of_colon(formula, expected_col):
         return CREDIT_COMMA_NOT_COLON
     
     # Check for partial credit: range slightly off
@@ -232,12 +291,16 @@ def _check_range_formula(formula: str, col: str) -> float:
     if "MAX(" not in normalized or "MIN(" not in normalized:
         return CREDIT_NONE
     
-    # Must reference correct column
-    if expected_col not in normalized:
-        return CREDIT_NONE
-    
     # Should have subtraction
     if "-" not in normalized:
+        return CREDIT_NONE
+    
+    # Check for ANCHORARRAY (Excel 365 spill reference) - valid for column I (differences)
+    if col == "I" and _uses_anchorarray(formula, "D"):
+        return CREDIT_FULL
+    
+    # Must reference correct column
+    if expected_col not in normalized:
         return CREDIT_NONE
     
     # Check for exact correct ranges in both MAX and MIN
@@ -252,7 +315,7 @@ def _check_range_formula(formula: str, col: str) -> float:
         return CREDIT_FULL
     
     # Check for comma instead of colon in MAX or MIN
-    if _detect_comma_instead_of_colon(formula, expected_col):
+    if _detect_comma_instead_of_colon(formula, expected_col) or _detect_minus_instead_of_colon(formula, expected_col):
         return CREDIT_COMMA_NOT_COLON
     
     # Check for range offset

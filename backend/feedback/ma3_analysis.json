@@ -6,12 +6,14 @@
   "NAME_TOO_SHORT": "[!] Name in B10 appears too short: '{name}'. Expected full name.",
 
   "DIFF_ALL_CORRECT": "[OK] All 50 difference formulas (D14:D63) are correct.",
+  "DIFF_ALL_CORRECT_ARRAY": "[OK] Difference calculations correct using array formula: {formula}",
   "DIFF_PARTIAL": "[!] Difference formulas: {correct}/50 correct.",
   "DIFF_NONE_CORRECT": "[X] No correct difference formulas found in D14:D63.",
   "DIFF_FORMULA_OK": "[ok] {cell}: Correct formula.",
   "DIFF_FORMULA_MISSING": "[x] {cell}: Missing formula. Expected =C{row}-B{row}.",
   "DIFF_FORMULA_WRONG": "[x] {cell}: Incorrect formula '{found}'. Expected =C{row}-B{row}.",
   "DIFF_NOT_FORMULA": "[x] {cell}: Contains a value, not a formula.",
+  "DIFF_ARRAY_WRONG": "[x] {cell}: Array formula '{found}' incorrect. Expected =C14:C63-B14:B63.",
 
   "STATS_ALL_CORRECT": "[OK] All 12 statistics formulas are correct.",
   "STATS_PARTIAL": "[!] Statistics: {correct}/12 formulas correct.",
