@@ -14,12 +14,12 @@ a = Analysis(
     pathex=[spec_dir],
     binaries=[],
     datas=[
-        ('graders', 'graders'),
-        ('orchestrator', 'orchestrator'),
-        ('utilities', 'utilities'),
-        ('writers', 'writers'),
-        ('templates', 'templates'),
-        ('feedback', 'feedback'),
+        (os.path.join(spec_dir, 'graders'), 'graders'),
+        (os.path.join(spec_dir, 'orchestrator'), 'orchestrator'),
+        (os.path.join(spec_dir, 'utilities'), 'utilities'),
+        (os.path.join(spec_dir, 'writers'), 'writers'),
+        (os.path.join(spec_dir, 'templates'), 'templates'),
+        (os.path.join(spec_dir, 'feedback'), 'feedback'),
     ],
     hiddenimports=[
         'uvicorn.logging',
