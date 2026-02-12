@@ -44,7 +44,7 @@
   "PERCENTILE_PARTIAL": "[!] Percentiles: {correct}/2 correct.",
   "PERCENTILE_NONE_CORRECT": "[X] No correct percentile formulas found.",
   "PERCENTILE_OK": "[ok] {cell}: Percentile formula correct.",
-  "PERCENTILE_WRONG": "[x] {cell}: Percentile formula incorrect. Expected PERCENTILE, PERCENTILE.INC, or PERCENTILE.EXC function.",
+  "PERCENTILE_WRONG": "[x] {cell}: Percentile formula incorrect. {reason}",
   "PERCENTILE_MISSING": "[x] {cell}: Percentile formula missing.",
 
   "EMPIRICAL_ALL_CORRECT": "[OK] Both empirical rule formulas are correct (lower and upper bounds).",

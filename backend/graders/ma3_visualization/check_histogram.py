@@ -171,12 +171,23 @@ def check_histogram(sheet: Worksheet) -> Tuple[float, List[Tuple[str, dict]]]:
     if hasattr(bar_chart, 'y_axis') and bar_chart.y_axis:
         y_title = _extract_title_text(bar_chart.y_axis.title)
     
+    # X-axis should be bins/categories, NOT "Frequency"
+    # "Frequency" on X-axis is a common mistake (swapped axes)
     if x_title and x_title.strip():
-        score += 0.5
-        feedback.append(("HIST_XAXIS_OK", {"title": x_title}))
+        x_title_lower = x_title.strip().lower()
+        if "frequency" in x_title_lower or "freq" == x_title_lower:
+            # Wrong - "Frequency" should be on Y-axis, not X-axis
+            feedback.append(("HIST_XAXIS_WRONG", {
+                "title": x_title,
+                "reason": "X-axis should show bin labels, not 'Frequency'"
+            }))
+        else:
+            score += 0.5
+            feedback.append(("HIST_XAXIS_OK", {"title": x_title}))
     else:
         feedback.append(("HIST_XAXIS_MISSING", {}))
     
+    # Y-axis should be "Frequency" or similar
     if y_title and y_title.strip():
         score += 0.5
         feedback.append(("HIST_YAXIS_OK", {"title": y_title}))

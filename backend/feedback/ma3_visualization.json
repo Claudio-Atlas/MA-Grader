@@ -64,6 +64,7 @@
   "HIST_TITLE_MISSING": "[x] Chart is missing a title.",
 
   "HIST_XAXIS_OK": "[ok] X-axis has a title: \"{title}\"",
+  "HIST_XAXIS_WRONG": "[x] X-axis title incorrect: \"{title}\". {reason}",
   "HIST_XAXIS_MISSING": "[x] X-axis is missing a title.",
 
   "HIST_YAXIS_OK": "[ok] Y-axis has a title: \"{title}\"",
