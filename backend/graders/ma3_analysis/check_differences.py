@@ -115,17 +115,6 @@ def check_differences(sheet: Worksheet) -> Tuple[float, List[Tuple[str, dict]]]:
     # This approach works regardless of type checking issues in PyInstaller
     formula_text = getattr(d14_value, 'text', None)
     
-    # DEBUG: Write to file to see what's happening
-    try:
-        with open('/tmp/ma_grader_debug.txt', 'a') as f:
-            f.write(f"D14 value: {d14_value}\n")
-            f.write(f"D14 type: {type(d14_value)}\n")
-            f.write(f"formula_text from getattr: {formula_text}\n")
-            f.write(f"formula_text type: {type(formula_text)}\n")
-            f.write(f"---\n")
-    except:
-        pass
-    
     # If we have a text attribute that looks like a formula, it's an array formula
     is_array_formula = (
         formula_text is not None and 
