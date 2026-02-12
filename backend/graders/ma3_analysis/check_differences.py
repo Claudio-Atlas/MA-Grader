@@ -109,19 +109,50 @@ def check_differences(sheet: Worksheet) -> Tuple[float, List[Tuple[str, dict]]]:
     
     # First, check if D14 contains a valid array formula (Excel 365 spill)
     d14_cell = sheet["D14"]
-    if isinstance(d14_cell.value, ArrayFormula):
-        if _is_valid_array_formula(d14_cell.value, 14, 63):
-            # Full credit - array formula covers entire range
-            return 6.0, [("DIFF_ALL_CORRECT_ARRAY", {
-                "formula": d14_cell.value.text
-            })]
-        else:
-            # Array formula exists but wrong formula
-            feedback.append(("DIFF_ARRAY_WRONG", {
-                "cell": "D14",
-                "found": d14_cell.value.text
-            }))
-            return 0.0, feedback
+    d14_value = d14_cell.value
+    
+    # Check for ArrayFormula - get text attribute directly if it exists
+    # This approach works regardless of type checking issues in PyInstaller
+    formula_text = getattr(d14_value, 'text', None)
+    
+    # DEBUG: Write to file to see what's happening
+    try:
+        with open('/tmp/ma_grader_debug.txt', 'a') as f:
+            f.write(f"D14 value: {d14_value}\n")
+            f.write(f"D14 type: {type(d14_value)}\n")
+            f.write(f"formula_text from getattr: {formula_text}\n")
+            f.write(f"formula_text type: {type(formula_text)}\n")
+            f.write(f"---\n")
+    except:
+        pass
+    
+    # If we have a text attribute that looks like a formula, it's an array formula
+    is_array_formula = (
+        formula_text is not None and 
+        isinstance(formula_text, str) and 
+        formula_text.startswith('=')
+    )
+    
+    if is_array_formula:
+        # Use text-based validation for PyInstaller compatibility
+        if formula_text:
+            normalized = _normalize_formula(formula_text)
+            valid_patterns = [
+                _normalize_formula("=C14:C63-B14:B63"),
+                _normalize_formula("=$C$14:$C$63-$B$14:$B$63"),
+            ]
+            if normalized in valid_patterns:
+                # Full credit - array formula covers entire range
+                return 6.0, [("DIFF_ALL_CORRECT_ARRAY", {
+                    "formula": formula_text
+                })]
+            else:
+                # Array formula exists but wrong formula
+                feedback.append(("DIFF_ARRAY_WRONG", {
+                    "cell": "D14",
+                    "found": formula_text
+                }))
+                return 0.0, feedback
     
     # Standard check: individual formulas in each cell
     for row in range(14, 64):  # Rows 14-63
@@ -132,9 +163,16 @@ def check_differences(sheet: Worksheet) -> Tuple[float, List[Tuple[str, dict]]]:
         formula = cell.value
         
         # Check if it's a formula
+        # Use duck typing for ArrayFormula detection (PyInstaller compatibility)
+        is_cell_array_formula = (
+            isinstance(formula, ArrayFormula) or 
+            type(formula).__name__ == 'ArrayFormula' or
+            (hasattr(formula, 'text') and hasattr(formula, 'ref'))
+        )
+        
         if formula is None:
             feedback.append(("DIFF_FORMULA_MISSING", {"cell": cell_ref, "row": row}))
-        elif isinstance(formula, ArrayFormula):
+        elif is_cell_array_formula:
             # ArrayFormula in a cell other than D14 - likely a spill cell
             feedback.append(("DIFF_NOT_FORMULA", {"cell": cell_ref}))
         elif not isinstance(formula, str) or not formula.startswith("="):

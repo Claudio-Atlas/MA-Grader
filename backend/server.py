@@ -399,7 +399,6 @@ async def run_pipeline_task(zip_path: str, course_label: str, assignment_type: s
     
     try:
         # Import pipeline modules here to avoid circular imports
-        from run_pipeline import run_pipeline
         from writers.ensure_workspace_assets import ensure_workspace_assets
         from writers.generate_course_folders import generate_course_folders
         from writers.import_zip_to_student_groups import import_zip_to_student_groups
