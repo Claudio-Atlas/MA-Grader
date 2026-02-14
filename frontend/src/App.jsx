@@ -254,6 +254,25 @@ function App() {
     );
   };
 
+  // Progress bar with percentage
+  const ProgressBar = () => {
+    const percent = state.progress_percent || 0;
+    return (
+      <div className="mb-4">
+        <div className="flex justify-between items-center mb-1">
+          <span className="text-sm text-dark-300">Progress</span>
+          <span className="text-sm font-medium text-accent-green">{percent}%</span>
+        </div>
+        <div className="h-2 bg-dark-700 rounded-full overflow-hidden">
+          <div 
+            className="h-full bg-accent-green transition-all duration-500 ease-out"
+            style={{ width: `${percent}%` }}
+          />
+        </div>
+      </div>
+    );
+  };
+
   // Progress steps
   const ProgressSteps = () => (
     <div className="flex items-center justify-between px-2">
@@ -431,7 +450,8 @@ function App() {
           </div>
           {state.status === 'running' && (
             <div className="mt-4">
-              <p className="text-sm text-dark-200 mb-4">{state.current_step || 'Starting...'}</p>
+              <p className="text-sm text-dark-200 mb-2">{state.current_step || 'Starting...'}</p>
+              <ProgressBar />
               <ProgressSteps />
             </div>
           )}

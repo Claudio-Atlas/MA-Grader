@@ -83,12 +83,31 @@ pipeline_state: Dict[str, Any] = {
     "status": "idle",        # idle, running, completed, error
     "cancel_requested": False,  # Flag for user-initiated cancellation
     "current_step": None,    # Human-readable description of current step
-    "progress": 0,           # Current step number (1-8)
+    "progress": 0,           # Current step number (1-6)
+    "progress_percent": 0,   # Progress as percentage (0-100)
     "total_steps": 6,        # Total number of pipeline steps
     "logs": [],              # List of log messages for the frontend
     "error": None,           # Error message if status is "error"
     "output_path": None,     # Path to graded output folder when complete
 }
+
+
+def set_pipeline_progress(step: int, step_name: str) -> None:
+    """
+    Update pipeline progress with step number and percentage.
+    
+    Args:
+        step: Current step number (1-6)
+        step_name: Human-readable description of the step
+    """
+    total_steps = pipeline_state["total_steps"]
+    percent = int((step / total_steps) * 100)
+    
+    pipeline_state["progress"] = step
+    pipeline_state["progress_percent"] = percent
+    pipeline_state["current_step"] = step_name
+    
+    print(f"[{percent}%] Step {step}/{total_steps}: {step_name}")
 
 
 # ============ Request/Response Models ============
@@ -276,6 +295,7 @@ async def reset_state() -> Dict[str, str]:
         "cancel_requested": False,
         "current_step": None,
         "progress": 0,
+        "progress_percent": 0,
         "logs": [],
         "error": None,
         "output_path": None,
@@ -352,6 +372,7 @@ async def start_grading(
         "cancel_requested": False,  # Reset cancellation flag
         "current_step": "initializing",
         "progress": 0,
+        "progress_percent": 0,
         "logs": [],
         "error": None,
         "output_path": None,
@@ -411,29 +432,24 @@ async def run_pipeline_task(zip_path: str, course_label: str, assignment_type: s
         from utilities.paths import ensure_dir
         
         # Step 1: Ensure workspace assets exist (templates, feedback JSON)
-        pipeline_state["current_step"] = "Preparing workspace assets..."
-        pipeline_state["progress"] = 1
+        set_pipeline_progress(1, "Preparing workspace assets...")
         ensure_workspace_assets()
         
         # Step 2: Create course-specific folders in workspace
-        pipeline_state["current_step"] = "Creating course folders..."
-        pipeline_state["progress"] = 2
+        set_pipeline_progress(2, "Creating course folders...")
         folder_safe, graded_path, submissions_path = generate_course_folders(course_label)
         
         # Step 3: Extract and organize student submissions from ZIP
-        pipeline_state["current_step"] = "Importing student submissions..."
-        pipeline_state["progress"] = 3
+        set_pipeline_progress(3, "Importing student submissions...")
         import_zip_to_student_groups(zip_path, folder_safe)
         
         # Step 4: Create individual grading sheets from template
-        pipeline_state["current_step"] = "Creating grading sheets..."
-        pipeline_state["progress"] = 4
+        set_pipeline_progress(4, "Creating grading sheets...")
         # Pass assignment_type to use correct template
         create_grading_sheets_from_folder(folder_safe, assignment_type=assignment_type)
         
         # Step 5: Grade all formula-based criteria
-        pipeline_state["current_step"] = "Grading formulas..."
-        pipeline_state["progress"] = 5
+        set_pipeline_progress(5, "Grading formulas...")
         # Route to correct grader based on assignment type (case-insensitive)
         assignment_upper = assignment_type.upper() if assignment_type else "MA1"
         print(f"[DEBUG] Routing grader for assignment_type='{assignment_type}' -> '{assignment_upper}'")
@@ -452,8 +468,7 @@ async def run_pipeline_task(zip_path: str, course_label: str, assignment_type: s
             return
         
         # Step 6: Build master summary workbook
-        pipeline_state["current_step"] = "Building instructor master workbook..."
-        pipeline_state["progress"] = 6
+        set_pipeline_progress(6, "Building instructor master workbook...")
         build_instructor_master_workbook(graded_path, assignment_type=assignment_type)
         
         # Pipeline completed successfully
