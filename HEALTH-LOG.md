@@ -121,6 +121,44 @@
 
 ---
 
+### Session: P1 #4 — GitHub Actions CI (17:15)
+
+**Context:** Adding automated testing to catch regressions.
+
+#### ✅ Completed
+
+| Task | Details |
+|------|---------|
+| Created ci.yml workflow | Runs on push to main/develop and all PRs |
+| Backend tests job | pytest with coverage reporting |
+| Frontend tests job | vitest (continues on error if not set up) |
+| Lint check job | flake8 for Python code |
+| Security check job | safety for known vulnerabilities |
+| Test summary job | Posts summary to GitHub, fails on backend test failure |
+
+#### CI Features
+
+- **Runs on:** Push to main/develop, all PRs
+- **Caching:** pip dependencies cached for speed
+- **Coverage:** Uploaded to Codecov (optional)
+- **Blocking:** Backend test failure blocks merge
+
+#### Commits
+
+| Hash | Message |
+|------|---------|
+| 35ff102 | P1 #4: Add GitHub Actions CI workflow |
+
+#### Score Impact
+
+| Persona | Before | After |
+|---------|--------|-------|
+| QA/Testing | 8/10 | **9/10** |
+| DevOps | 6/10 | **7/10** |
+| Overall | B+ | **A-** |
+
+---
+
 ## 2026-02-08
 
 ### Session: Pipeline Streamlining
