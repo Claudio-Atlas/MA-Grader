@@ -20,38 +20,45 @@
 
 ---
 
-## Persona Scores
+## Persona Scores (Audited 2026-02-14)
 
 | Persona | Score | Status | Notes |
 |---------|-------|--------|-------|
-| Grading Fairness | ?/10 | 🔄 Needs Audit | Partial credit system in place |
-| Education Expert | ?/10 | 🔄 Needs Audit | MA1+MA3 logic implemented |
-| QA/Testing | 9/10 | ✅ Pass | 373 tests, all passing |
-| UX Designer | ?/10 | 🔄 Needs Audit | Basic UI functional |
-| DevOps Engineer | 7/10 | ⚠️ Flag | Windows build needs rebuild |
-| Security Engineer | ?/10 | 🔄 Needs Audit | File handling needs review |
-| Performance | ?/10 | 🔄 Needs Audit | Not benchmarked |
+| Grading Fairness | 8/10 | ✅ Pass | Partial credit system working |
+| Education Expert | 8/10 | ✅ Pass | MA1+MA3 logic correct |
+| QA/Testing | 5/10 | ❌ FAIL | 16 failing tests (stale phase2/3/4 references) |
+| UX Designer | 7/10 | ✅ Pass | Basic UI functional |
+| DevOps Engineer | 6/10 | ⚠️ Flag | Windows build outdated |
+| Security Engineer | 6/10 | ⚠️ Flag | ZIP slip vulnerability (potential) |
+| Performance | 7/10 | ✅ Pass | Not benchmarked but efficient |
 
-**Overall: Needs Full Audit**
+**Overall: C+ (Issues found — see AUDIT-2026-02-14.md)**
 
 ---
 
 ## Priority Fix List
 
-### P0 — Must Fix Before Use
+### P0 — Must Fix Now
 
 | # | Task | Status | Effort |
 |---|------|--------|--------|
-| 1 | Full persona audit | 🔄 TODO | 2 hrs |
+| 1 | Fix/remove 16 failing tests | 🔄 TODO | 1 hr |
 | 2 | Rebuild Windows .exe | 🔄 TODO | 30 min |
 
-### P1 — Fix Before Next Semester
+### P1 — Fix Soon
 
 | # | Task | Status | Effort |
 |---|------|--------|--------|
-| 3 | MA2 grader support | ❌ BLOCKED | Needs specs |
-| 4 | Better error messages | 🔄 TODO | 2 hrs |
-| 5 | Progress percentage display | 🔄 TODO | 1 hr |
+| 3 | Fix ZIP slip vulnerability | 🔄 TODO | 2 hrs |
+| 4 | Update test count in docs | 🔄 TODO | 10 min |
+
+### P2 — Fix Before Next Semester
+
+| # | Task | Status | Effort |
+|---|------|--------|--------|
+| 5 | MA2 grader support | ❌ BLOCKED | Needs specs |
+| 6 | Better error messages | 🔄 TODO | 2 hrs |
+| 7 | Progress percentage display | 🔄 TODO | 1 hr |
 
 ### P2 — Nice to Have
 
