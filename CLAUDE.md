@@ -76,6 +76,37 @@ grep -r "function" backend/graders/
 | Correct formula, wrong format | Full credit (substance over style) |
 | Extra whitespace | Strip and compare |
 
+### 3. Acceptable Formula Variations
+
+**Income Analysis (MA1):**
+| Cell | Expected | Also Acceptable |
+|------|----------|-----------------|
+| B30 (Slope) | `=SLOPE(B19:B26,A19:A26)` | With `$` signs, reversed ranges (2pts) |
+| B31 (Intercept) | `=INTERCEPT(B19:B26,A19:A26)` | With `$` signs, reversed ranges (2pts) |
+| E19:E35 (Predictions) | `=$B$30*D19+$B$31` | `=B30*D19+B31`, `=SLOPE(...)*D19+INTERCEPT(...)` |
+
+**Unit Conversions (MA1):**
+| Conversion | Expected Pattern | Notes |
+|------------|------------------|-------|
+| Temp F→C | `=(F-32)*5/9` or `=(F-32)/1.8` | Both valid |
+| Temp C→F | `=C*9/5+32` or `=C*1.8+32` | Both valid |
+| Length | Multiply by conversion factor | Any valid factor |
+
+**Currency Conversion (MA1):**
+| Cell | Expected | Notes |
+|------|----------|-------|
+| Exchange rates | `=1/[code]` or direct lookup | Either method valid |
+| Currency codes | Must match student's chosen countries | Case-insensitive |
+
+**MA3 Analysis:**
+| Statistic | Expected | Also Acceptable |
+|-----------|----------|-----------------|
+| Mean | `=AVERAGE(D14:D63)` | With `$` signs |
+| Median | `=MEDIAN(D14:D63)` | With `$` signs |
+| Std Dev | `=STDEV(D14:D63)` | `=STDEV.S(...)`, `=STDEV.P(...)`, `=_xlfn.STDEV.S(...)` |
+| Range | `=MAX(...)-MIN(...)` | Order doesn't matter |
+| Percentile | `=PERCENTILE(D14:D63,0.25)` | `=PERCENTILE.INC(...)`, `=PERCENTILE.EXC(...)` |
+
 ### 3. Code Standards
 
 - **openpyxl only** — No Excel COM automation
