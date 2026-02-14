@@ -304,31 +304,47 @@ class TestRangeFormula:
 # ============================================================
 
 class TestPercentileFormula:
-    """Tests for PERCENTILE formula validation."""
+    """Tests for PERCENTILE formula validation.
     
-    def test_percentile_basic(self):
-        """Basic PERCENTILE formula."""
-        assert _check_percentile_formula("=PERCENTILE(D14:D63,0.5)") is True
+    Note: _check_percentile_formula(formula, cell_ref) returns (bool, reason).
+    G27 should be ~25th percentile (0.25 ± 0.05)
+    G28 should be ~75th percentile (0.75 ± 0.05)
+    """
+    
+    def test_percentile_basic_g27(self):
+        """Basic PERCENTILE formula for G27 (25th percentile)."""
+        result, reason = _check_percentile_formula("=PERCENTILE(D14:D63,0.25)", "G27")
+        assert result is True, reason
+    
+    def test_percentile_basic_g28(self):
+        """Basic PERCENTILE formula for G28 (75th percentile)."""
+        result, reason = _check_percentile_formula("=PERCENTILE(D14:D63,0.75)", "G28")
+        assert result is True, reason
     
     def test_percentile_inc(self):
         """PERCENTILE.INC formula."""
-        assert _check_percentile_formula("=PERCENTILE.INC(D14:D63,0.47)") is True
+        result, reason = _check_percentile_formula("=PERCENTILE.INC(D14:D63,0.25)", "G27")
+        assert result is True, reason
     
     def test_percentile_exc(self):
         """PERCENTILE.EXC formula."""
-        assert _check_percentile_formula("=PERCENTILE.EXC(D14:D63,0.25)") is True
+        result, reason = _check_percentile_formula("=PERCENTILE.EXC(D14:D63,0.25)", "G27")
+        assert result is True, reason
     
     def test_percentile_xlfn(self):
         """Excel internal format."""
-        assert _check_percentile_formula("=_xlfn.PERCENTILE.INC(D14:D63,0.49)") is True
+        result, reason = _check_percentile_formula("=_xlfn.PERCENTILE.INC(D14:D63,0.25)", "G27")
+        assert result is True, reason
     
     def test_percentile_wrong_range(self):
         """Wrong data range should fail."""
-        assert _check_percentile_formula("=PERCENTILE(A1:A10,0.5)") is False
+        result, reason = _check_percentile_formula("=PERCENTILE(A1:A10,0.25)", "G27")
+        assert result is False
     
     def test_not_percentile(self):
         """Non-PERCENTILE function should fail."""
-        assert _check_percentile_formula("=AVERAGE(D14:D63)") is False
+        result, reason = _check_percentile_formula("=AVERAGE(D14:D63)", "G27")
+        assert result is False
 
 
 # ============================================================
