@@ -50,6 +50,38 @@
 
 ---
 
+### Session: P0 #1 Fix — Tests (16:50)
+
+**Context:** Fixing all failing tests identified in audit.
+
+#### ✅ Completed
+
+| Task | Details |
+|------|---------|
+| Removed stale phase2/3/4 tests | Pipeline simplified, tests referenced removed modules |
+| Fixed TestPercentileFormula | Function signature changed, tests not updated |
+| Added MA3 tests | Better coverage for MA3 grading |
+
+#### Test Results
+
+- **Before:** 16 failed, 352 passed
+- **After:** 0 failed, 362 passed, 11 skipped
+
+#### Commits
+
+| Hash | Message |
+|------|---------|
+| d1fdcc1 | Fix all failing tests — 362 passing, 0 failing |
+
+#### Score Impact
+
+| Persona | Before | After |
+|---------|--------|-------|
+| QA/Testing | 5/10 | **8/10** |
+| Overall | C+ | **B** |
+
+---
+
 ## 2026-02-08
 
 ### Session: Pipeline Streamlining
