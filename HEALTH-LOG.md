@@ -187,6 +187,41 @@
 
 ---
 
+### Session: P2 #7 — Progress Percentage (17:35)
+
+**Context:** Adding visual progress feedback for better UX.
+
+#### ✅ Completed
+
+| Component | Change |
+|-----------|--------|
+| Backend server.py | Added progress_percent field, set_pipeline_progress() helper |
+| Frontend App.jsx | Added ProgressBar component with animated bar |
+
+#### UI Change
+
+```
+Before:                      After:
+Step 3/6: Grading...         Step 3/6: Grading...
+[○][○][●][○][○][○]           Progress: 50%
+                             [████████░░░░░░░░]
+                             [○][○][●][○][○][○]
+```
+
+#### Commits
+
+| Hash | Message |
+|------|---------|
+| f22fd6f | P2 #7: Add progress percentage display |
+
+#### Score Impact
+
+| Persona | Before | After |
+|---------|--------|-------|
+| UX Designer | 7/10 | **8/10** |
+
+---
+
 ## 2026-02-08
 
 ### Session: Pipeline Streamlining

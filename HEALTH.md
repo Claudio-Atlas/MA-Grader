@@ -27,12 +27,12 @@
 | Grading Fairness | 8/10 | ✅ Pass | Partial credit system working |
 | Education Expert | 9/10 | ✅ Pass | MA1+MA3 logic + formula docs |
 | QA/Testing | 9/10 | ✅ Pass | 369 tests + CI pipeline |
-| UX Designer | 7/10 | ✅ Pass | Basic UI functional |
+| UX Designer | 8/10 | ✅ Pass | Progress bar + percentage added |
 | DevOps Engineer | 7/10 | ✅ Pass | CI added, Windows build pending |
 | Security Engineer | 8/10 | ✅ Pass | ZIP slip fixed, path validation added |
 | Performance | 7/10 | ✅ Pass | Not benchmarked but efficient |
 
-**Overall: A- (All critical personas ≥8, most ≥9)**
+**Overall: A- (All personas ≥7, critical ≥8)**
 
 ---
 
@@ -58,7 +58,7 @@
 |---|------|--------|--------|
 | 5 | MA2 grader support | ❌ BLOCKED | Needs specs |
 | 6 | Better error messages | 🔄 TODO | 2 hrs |
-| 7 | Progress percentage display | 🔄 TODO | 1 hr |
+| 7 | Progress percentage display | ✅ DONE | — |
 | 8 | Document formula variations | ✅ DONE | — |
 
 ### P2 — Nice to Have
