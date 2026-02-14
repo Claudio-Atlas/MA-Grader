@@ -4,6 +4,48 @@
 
 ---
 
+## 2026-02-15
+
+### Session: P0 #2 — Windows Build via CI
+
+**Context:** Added Windows executable build to GitHub Actions CI.
+
+#### ✅ Completed
+
+| Task | Details |
+|------|---------|
+| Added build-windows job | Runs on windows-latest, builds after tests pass |
+| PyInstaller integration | Uses existing server.spec |
+| Artifact upload | 30-day retention, downloadable from Actions tab |
+| Test summary updated | Shows Windows build status |
+
+#### GATE CHECK
+
+```
+GATE CHECK:
+- Branch: feature/windows-ci-build (or direct to main)
+- Student data involved: NO
+- Template change: NO
+- Grading logic change: NO
+- Tests needed: none — no logic change
+- Impact areas: DevOps (.github/workflows/ci.yml)
+```
+
+#### Commits
+
+| Hash | Message |
+|------|---------|
+| TBD | P0 #2: Add Windows build to CI |
+
+#### Score Impact
+
+| Persona | Before | After |
+|---------|--------|-------|
+| DevOps | 7/10 | **8/10** |
+| Overall | A- | **A** |
+
+---
+
 ## 2026-02-14
 
 ### Session: System Setup + Full Audit

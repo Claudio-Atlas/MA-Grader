@@ -114,9 +114,48 @@ jobs:
           safety check --full-report || true
         continue-on-error: true
 
+  build-windows:
+    name: Build Windows Executable
+    runs-on: windows-latest
+    needs: [backend-tests]  # Only build if tests pass
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: Cache pip dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~\AppData\Local\pip\Cache
+          key: ${{ runner.os }}-pip-${{ hashFiles('backend/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+      
+      - name: Install dependencies
+        working-directory: backend
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pyinstaller
+      
+      - name: Build Windows executable
+        working-directory: backend
+        run: pyinstaller server.spec
+      
+      - name: Upload Windows executable
+        uses: actions/upload-artifact@v4
+        with:
+          name: ma-grader-windows
+          path: backend/dist/
+          retention-days: 30
+
   test-summary:
     name: Test Summary
-    needs: [backend-tests, frontend-tests, lint, security-check]
+    needs: [backend-tests, frontend-tests, lint, security-check, build-windows]
     runs-on: ubuntu-latest
     if: always()
     
@@ -148,6 +187,12 @@ jobs:
             echo "✅ Security: Passed" >> $GITHUB_STEP_SUMMARY
           else
             echo "⚠️ Security: ${{ needs.security-check.result }}" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          if [ "${{ needs.build-windows.result }}" == "success" ]; then
+            echo "✅ Windows Build: Passed" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⚠️ Windows Build: ${{ needs.build-windows.result }}" >> $GITHUB_STEP_SUMMARY
           fi
       
       - name: Fail if backend tests failed

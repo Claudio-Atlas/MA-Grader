@@ -15,7 +15,7 @@
 | MA3 Grader | ✅ Complete | Analysis, Visualization |
 | MA2 Grader | ❌ Not Started | Waiting on assignment specs |
 | Tests | ✅ 362 Passing | 100% pass rate (11 skipped) |
-| Windows Build | ⚠️ Needs Rebuild | PyInstaller fix applied, needs rebuild |
+| Windows Build | ✅ Auto (CI) | GitHub Actions builds on push |
 | Mac Build | ✅ Working | Tested |
 
 ---
@@ -28,11 +28,11 @@
 | Education Expert | 9/10 | ✅ Pass | MA1+MA3 logic + formula docs |
 | QA/Testing | 9/10 | ✅ Pass | 369 tests + CI pipeline |
 | UX Designer | 8/10 | ✅ Pass | Progress bar + percentage added |
-| DevOps Engineer | 7/10 | ✅ Pass | CI added, Windows build pending |
+| DevOps Engineer | 8/10 | ✅ Pass | CI + auto Windows build |
 | Security Engineer | 8/10 | ✅ Pass | ZIP slip fixed, path validation added |
 | Performance | 7/10 | ✅ Pass | Not benchmarked but efficient |
 
-**Overall: A- (All personas ≥7, critical ≥8)**
+**Overall: A (All personas ≥7, critical ≥8, DevOps now 8/10)**
 
 ---
 
@@ -43,7 +43,7 @@
 | # | Task | Status | Effort |
 |---|------|--------|--------|
 | 1 | Fix/remove failing tests | ✅ DONE | — |
-| 2 | Rebuild Windows .exe | 🔄 TODO | 30 min |
+| 2 | Rebuild Windows .exe | ✅ DONE (CI) | — |
 
 ### P1 — Fix Soon
 
