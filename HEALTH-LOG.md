@@ -159,6 +159,34 @@
 
 ---
 
+### Session: P2 #8 — Document Formulas (17:25)
+
+**Context:** Document acceptable formula variations for Education Expert.
+
+#### ✅ Completed
+
+| Task | Details |
+|------|---------|
+| Updated CLAUDE.md | Added formula variation tables |
+| Income Analysis | SLOPE, INTERCEPT, predictions patterns |
+| Unit Conversions | Temperature, length formulas |
+| Currency Conversion | Exchange rate patterns |
+| MA3 Analysis | All statistics with variants |
+
+#### Commits
+
+| Hash | Message |
+|------|---------|
+| 11410dc | P2 #7: Document acceptable formula variations |
+
+#### Score Impact
+
+| Persona | Before | After |
+|---------|--------|-------|
+| Education Expert | 8/10 | **9/10** |
+
+---
+
 ## 2026-02-08
 
 ### Session: Pipeline Streamlining
