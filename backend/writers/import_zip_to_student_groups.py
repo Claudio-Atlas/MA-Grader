@@ -8,12 +8,63 @@ from pathlib import Path
 from utilities.paths import ensure_dir
 
 
+def _is_safe_path(base_path: str, target_path: str) -> bool:
+    """
+    Check if target_path is safely within base_path (no path traversal).
+    
+    Prevents ZIP slip attacks where malicious archives contain entries
+    like '../../../etc/passwd' that escape the extraction directory.
+    
+    Args:
+        base_path: The intended extraction directory
+        target_path: The resolved path of the file to extract
+    
+    Returns:
+        True if target_path is within base_path, False otherwise
+    """
+    # Resolve to absolute paths to handle any symlinks or relative components
+    base = os.path.realpath(base_path)
+    target = os.path.realpath(target_path)
+    
+    # Check that target starts with base (is inside the directory)
+    return target.startswith(base + os.sep) or target == base
+
+
+def _safe_extract(zip_file: zipfile.ZipFile, dest_dir: str) -> None:
+    """
+    Safely extract ZIP contents, validating each path against traversal attacks.
+    
+    Args:
+        zip_file: Open ZipFile object
+        dest_dir: Destination directory (must exist)
+    
+    Raises:
+        ValueError: If any archive member attempts path traversal
+    """
+    for member in zip_file.namelist():
+        # Get the target path for this member
+        target_path = os.path.join(dest_dir, member)
+        
+        # Validate it's within our destination
+        if not _is_safe_path(dest_dir, target_path):
+            raise ValueError(
+                f"Blocked path traversal attempt in ZIP: {member}"
+            )
+    
+    # All paths validated, safe to extract
+    zip_file.extractall(dest_dir)
+
+
 def import_zip_to_student_groups(zip_path: str, course_label: str) -> str:
     """
     Extracts a downloaded student ZIP into workspace:
 
         Documents/MA1_Autograder/student_groups/<course_label>/
 
+    Security:
+        - Validates all archive paths before extraction (prevents ZIP slip)
+        - Rejects any path that would escape the destination directory
+    
     Returns:
         destination folder path
     """
@@ -37,7 +88,8 @@ def import_zip_to_student_groups(zip_path: str, course_label: str) -> str:
     os.makedirs(temp_extract, exist_ok=True)
 
     with zipfile.ZipFile(zip_path, "r") as z:
-        z.extractall(temp_extract)
+        # Use safe extraction to prevent path traversal attacks
+        _safe_extract(z, temp_extract)
 
     # If the zip contains one top-level folder, move its contents up
     items = [p for p in Path(temp_extract).iterdir()]
