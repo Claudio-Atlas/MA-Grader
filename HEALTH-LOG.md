@@ -82,6 +82,45 @@
 
 ---
 
+### Session: P1 #3 Fix — ZIP Security (17:05)
+
+**Context:** Fixing ZIP slip vulnerability identified in audit.
+
+#### ✅ Completed
+
+| Task | Details |
+|------|---------|
+| Added _is_safe_path() | Validates target path is within base directory |
+| Added _safe_extract() | Validates all ZIP members before extraction |
+| Added security tests | 7 new tests covering path traversal attacks |
+
+#### Security Features
+
+- Blocks `../` path traversal in ZIP entries
+- Blocks absolute paths in ZIP entries
+- Validates all members BEFORE extracting any
+- Raises ValueError with clear message on attack attempt
+
+#### Test Results
+
+- **Before:** 362 passed
+- **After:** 369 passed (7 new security tests)
+
+#### Commits
+
+| Hash | Message |
+|------|---------|
+| 8e3a792 | P1 #3: Fix ZIP slip vulnerability |
+
+#### Score Impact
+
+| Persona | Before | After |
+|---------|--------|-------|
+| Security | 6/10 | **8/10** |
+| Overall | B | **B+** |
+
+---
+
 ## 2026-02-08
 
 ### Session: Pipeline Streamlining

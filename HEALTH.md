@@ -26,13 +26,13 @@
 |---------|-------|--------|-------|
 | Grading Fairness | 8/10 | ✅ Pass | Partial credit system working |
 | Education Expert | 8/10 | ✅ Pass | MA1+MA3 logic correct |
-| QA/Testing | 8/10 | ✅ Pass | 362 tests passing, 0 failing |
+| QA/Testing | 8/10 | ✅ Pass | 369 tests passing, 0 failing |
 | UX Designer | 7/10 | ✅ Pass | Basic UI functional |
 | DevOps Engineer | 6/10 | ⚠️ Flag | Windows build outdated |
-| Security Engineer | 6/10 | ⚠️ Flag | ZIP slip vulnerability (potential) |
+| Security Engineer | 8/10 | ✅ Pass | ZIP slip fixed, path validation added |
 | Performance | 7/10 | ✅ Pass | Not benchmarked but efficient |
 
-**Overall: B (P0 #1 fixed, tests passing)**
+**Overall: B+ (P0 #1 + P1 #3 fixed)**
 
 ---
 
@@ -49,8 +49,8 @@
 
 | # | Task | Status | Effort |
 |---|------|--------|--------|
-| 3 | Fix ZIP slip vulnerability | 🔄 TODO | 2 hrs |
-| 4 | Update test count in docs | 🔄 TODO | 10 min |
+| 3 | Fix ZIP slip vulnerability | ✅ DONE | — |
+| 4 | Add GitHub Actions CI | 🔄 TODO | 2 hrs |
 
 ### P2 — Fix Before Next Semester
 
