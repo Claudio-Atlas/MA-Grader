@@ -65,9 +65,30 @@
 
 | # | Task | Status | Effort |
 |---|------|--------|--------|
-| 6 | Batch processing multiple courses | 🔄 TODO | 4 hrs |
-| 7 | Grade history/comparison | 🔄 TODO | 3 hrs |
-| 8 | Direct Canvas integration | 🔄 TODO | 8 hrs |
+| 9 | Batch processing multiple courses | 🔄 TODO | 4 hrs |
+| 10 | Grade history/comparison | 🔄 TODO | 3 hrs |
+
+### P3 — HALO LMS Integration (Investigate)
+
+| # | Task | Status | Notes |
+|---|------|--------|-------|
+| 1 | Contact GCU about HALO API | 🔄 TODO | See questions below |
+| 2 | LTI 1.3 integration (if supported) | ⏸️ BLOCKED | Waiting on #1 |
+
+**Who to contact:**
+- Academic Technology / Instructional Design
+- IT Help Desk (to get routed)
+- LMS Administrator
+
+**Questions to ask:**
+> "I'm developing an internal tool to help grade Excel assignments for my Math courses. I'd like to integrate it with HALO so students' submissions can be automatically processed and grades uploaded back.
+>
+> Does HALO support:
+> 1. **LTI 1.3 integration** for external tools?
+> 2. **API access** for downloading submissions and uploading grades?
+> 3. **Developer documentation** I could review?
+>
+> If not directly supported, who would I talk to about getting this capability?"
 
 ---
 
