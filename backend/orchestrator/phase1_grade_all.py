@@ -23,6 +23,10 @@ from writers.write_currency_conversion_results_v2 import write_currency_conversi
 from utilities.validate_submission import validate_required_sheets, log_missing_sheets
 # --------------------------
 
+# ---- Error Handling ----
+from utilities.errors import GradingResult, GradingError, ErrorCategory, classify_error
+# ------------------------
+
 
 def phase1_grade_all_students(
     submissions_path: str,
@@ -48,9 +52,13 @@ def phase1_grade_all_students(
     total_students = len(student_files)
     logger.info(f"Found {total_students} student submissions to grade")
 
-    graded_count = 0
-    error_count = 0
+    # Initialize result tracker
+    result = GradingResult()
     skipped_count = 0
+    
+    # Store result in pipeline_state for frontend access
+    if pipeline_state is not None:
+        pipeline_state["grading_result"] = result
 
     for idx, filename in enumerate(student_files, 1):
         # Check for cancellation request
@@ -132,11 +140,12 @@ def phase1_grade_all_students(
 
             grading_wb.save(grading_file)
             logger.info(f"  ✓ Graded: {student_name}")
-            graded_count += 1
+            result.add_success()
 
         except Exception as e:
-            logger.error(f"  ✗ Error grading {student_name}: {e}")
-            error_count += 1
+            grading_error = classify_error(e, student_name=student_name)
+            result.add_issue(grading_error)
+            logger.error(f"  ✗ {grading_error.problem}")
         
         finally:
             # Ensure workbooks are always closed to prevent file locks and memory leaks
@@ -148,5 +157,16 @@ def phase1_grade_all_students(
     # Summary
     logger.info("")
     logger.info("-" * 40)
-    logger.info(f"Phase 1 Summary: {graded_count} graded, {error_count} errors, {skipped_count} sheets skipped")
+    issue_count = len(result.issues)
+    logger.info(f"Phase 1 Summary: {result.success_count} graded, {issue_count} issues, {skipped_count} sheets skipped")
+    
+    # Log any student issues
+    if result.issues:
+        logger.info("")
+        logger.info("Student Issues:")
+        for issue in result.issues:
+            name = issue.student_name or "Unknown"
+            logger.info(f"  • {name}: {issue.problem}")
+            logger.info(f"    → {issue.action}")
+    
     logger.info("-" * 40)

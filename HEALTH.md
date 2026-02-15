@@ -14,7 +14,7 @@
 | MA1 Grader | ✅ Complete | Income, Unit Conversions, Currency |
 | MA3 Grader | ✅ Complete | Analysis, Visualization |
 | MA2 Grader | ❌ Not Started | Waiting on assignment specs |
-| Tests | ✅ 362 Passing | 100% pass rate (11 skipped) |
+| Tests | ✅ 391 Passing | 100% pass rate (11 skipped) |
 | Windows Build | ✅ Auto (CI) | GitHub Actions builds on push |
 | Mac Build | ✅ Working | Tested |
 
@@ -27,7 +27,7 @@
 | Grading Fairness | 8/10 | ✅ Pass | Partial credit system working |
 | Education Expert | 9/10 | ✅ Pass | MA1+MA3 logic + formula docs |
 | QA/Testing | 9/10 | ✅ Pass | 369 tests + CI pipeline |
-| UX Designer | 8/10 | ✅ Pass | Progress bar + percentage added |
+| UX Designer | 9/10 | ✅ Pass | User-friendly errors + summary |
 | DevOps Engineer | 8/10 | ✅ Pass | CI + auto Windows build |
 | Security Engineer | 8/10 | ✅ Pass | ZIP slip fixed, path validation added |
 | Performance | 7/10 | ✅ Pass | Not benchmarked but efficient |
@@ -57,7 +57,7 @@
 | # | Task | Status | Effort |
 |---|------|--------|--------|
 | 5 | MA2 grader support | ❌ BLOCKED | Needs specs |
-| 6 | Better error messages | 🔄 TODO | 2 hrs |
+| 6 | Better error messages | ✅ DONE | — |
 | 7 | Progress percentage display | ✅ DONE | — |
 | 8 | Document formula variations | ✅ DONE | — |
 

@@ -6,6 +6,70 @@
 
 ## 2026-02-15
 
+### Session: P2 #6 — Better Error Messages
+
+**Context:** Implementing user-friendly error messages for instructors.
+
+#### GATE CHECK
+
+```
+GATE CHECK:
+- Branch: main (direct commit)
+- Student data involved: NO
+- Template change: NO
+- Grading logic change: NO — just error reporting
+- Tests needed: tests/test_error_messages.py (22 new tests)
+- Impact areas: Backend (utilities/errors.py, server.py, orchestrator/), Frontend (App.jsx)
+```
+
+#### ✅ Completed
+
+| Task | Details |
+|------|---------|
+| Created utilities/errors.py | Error classification system with GradingError, GradingResult |
+| Error categories | Blocking, Student Issue, Recoverable |
+| User-friendly messages | Plain English for FileNotFoundError, KeyError, ZIP errors, encoding, etc. |
+| Updated phase1_grade_all.py | Tracks issues with GradingResult |
+| Updated phase1_grade_all_ma3.py | Same tracking for MA3 |
+| Updated server.py | classify_error, grading_summary in state |
+| Updated App.jsx | Shows summary with student issues, expandable technical details |
+| 22 new tests | Full coverage of error classification |
+
+#### Error Message Examples
+
+| Technical | User-Friendly |
+|-----------|---------------|
+| `FileNotFoundError: Submission not found` | "John Smith: Missing submission file" → "Check if student submitted .xlsx" |
+| `KeyError: 'Grading Sheet'` | "Grading template is missing the 'Grading Sheet' tab" → "Re-download template" |
+| `UnicodeDecodeError` | "File contains special characters" → "Student may have used emoji" |
+| `BadZipFile` | "The uploaded file isn't a valid ZIP" → "Re-download from Canvas" |
+
+#### Frontend Changes
+
+Completion screen now shows:
+- ✅ X students graded successfully
+- ⚠️ Y student issue(s) with names and actions
+- Expandable technical details for debugging
+
+#### Test Results
+
+- **Before:** 369 passed
+- **After:** 391 passed (22 new)
+
+#### Commits
+
+| Hash | Message |
+|------|---------|
+| TBD | P2 #6: User-friendly error messages |
+
+#### Score Impact
+
+| Persona | Before | After |
+|---------|--------|-------|
+| UX Designer | 8/10 | **9/10** |
+
+---
+
 ### Session: P0 #2 — Windows Build via CI
 
 **Context:** Added Windows executable build to GitHub Actions CI.

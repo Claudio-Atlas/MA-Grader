@@ -56,7 +56,9 @@ function App() {
     progress: 0,
     logs: [],
     error: null,
-    output_path: null
+    error_details: null,
+    output_path: null,
+    grading_summary: null
   });
   const [showLogs, setShowLogs] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -200,7 +202,9 @@ function App() {
         progress: 0,
         logs: [],
         error: null,
-        output_path: null
+        error_details: null,
+        output_path: null,
+        grading_summary: null
       });
       setZipPath('');
     } catch (err) {
@@ -456,13 +460,60 @@ function App() {
             </div>
           )}
           {state.status === 'completed' && (
-            <p className="text-accent-green text-sm">✓ Grading complete! Output ready.</p>
+            <div className="space-y-3">
+              <p className="text-accent-green text-sm">✓ Grading complete! Output ready.</p>
+              
+              {/* Grading Summary */}
+              {state.grading_summary && (
+                <div className="bg-dark-700 rounded-lg p-4 space-y-2">
+                  <p className="text-dark-100 font-medium">
+                    ✅ {state.grading_summary.success_count} students graded successfully
+                  </p>
+                  
+                  {/* Student Issues */}
+                  {state.grading_summary.student_issues?.length > 0 && (
+                    <div className="mt-3">
+                      <p className="text-yellow-400 text-sm font-medium mb-2">
+                        ⚠️ {state.grading_summary.student_issues.length} student issue(s):
+                      </p>
+                      <div className="space-y-2 ml-4">
+                        {state.grading_summary.student_issues.map((issue, i) => (
+                          <div key={i} className="text-sm">
+                            <p className="text-dark-200">
+                              • <span className="font-medium">{issue.student_name || 'Unknown'}</span>: {issue.problem}
+                            </p>
+                            <p className="text-dark-400 ml-3">→ {issue.action}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
           )}
           {state.status === 'cancelled' && (
             <p className="text-orange-400 text-sm">⊘ Pipeline cancelled by user.</p>
           )}
           {state.status === 'error' && (
-            <p className="text-accent-red text-sm">✕ {state.error}</p>
+            <div className="space-y-2">
+              <p className="text-accent-red text-sm font-medium">✕ {state.error}</p>
+              {state.error_details && (
+                <div className="bg-dark-700 rounded-lg p-3 space-y-1">
+                  <p className="text-dark-200 text-sm">
+                    <span className="text-dark-400">What to do:</span> {state.error_details.action}
+                  </p>
+                  <details className="text-xs">
+                    <summary className="text-dark-400 cursor-pointer hover:text-dark-300">
+                      Technical details
+                    </summary>
+                    <p className="text-dark-500 mt-1 font-mono break-all">
+                      {state.error_details.technical}
+                    </p>
+                  </details>
+                </div>
+              )}
+            </div>
           )}
         </div>
 

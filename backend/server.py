@@ -51,6 +51,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import uvicorn
 
+# Error handling utilities
+from utilities.errors import classify_error, format_error_summary, GradingResult
+
 # Add backend to path for imports
 # Handle PyInstaller bundled execution
 if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
@@ -89,6 +92,8 @@ pipeline_state: Dict[str, Any] = {
     "logs": [],              # List of log messages for the frontend
     "error": None,           # Error message if status is "error"
     "output_path": None,     # Path to graded output folder when complete
+    "grading_result": None,  # GradingResult object (set during grading)
+    "grading_summary": None, # Summary dict for frontend (set after grading)
 }
 
 
@@ -274,9 +279,24 @@ async def get_state() -> Dict[str, Any]:
         - total_steps: Total number of steps (6)
         - logs: List of log messages
         - error: Error message if failed
+        - error_details: Structured error info (category, problem, action, technical)
         - output_path: Path to output folder when complete
+        - grading_summary: Summary of grading results (success_count, issues)
     """
-    return pipeline_state
+    # Return serializable state (exclude grading_result which is a Python object)
+    return {
+        "status": pipeline_state["status"],
+        "cancel_requested": pipeline_state["cancel_requested"],
+        "current_step": pipeline_state["current_step"],
+        "progress": pipeline_state["progress"],
+        "progress_percent": pipeline_state["progress_percent"],
+        "total_steps": pipeline_state["total_steps"],
+        "logs": pipeline_state["logs"],
+        "error": pipeline_state["error"],
+        "error_details": pipeline_state.get("error_details"),
+        "output_path": pipeline_state["output_path"],
+        "grading_summary": pipeline_state.get("grading_summary"),
+    }
 
 
 @app.post("/reset")
@@ -298,7 +318,10 @@ async def reset_state() -> Dict[str, str]:
         "progress_percent": 0,
         "logs": [],
         "error": None,
+        "error_details": None,
         "output_path": None,
+        "grading_result": None,
+        "grading_summary": None,
     })
     return {"status": "reset"}
 
@@ -471,6 +494,15 @@ async def run_pipeline_task(zip_path: str, course_label: str, assignment_type: s
         set_pipeline_progress(6, "Building instructor master workbook...")
         build_instructor_master_workbook(graded_path, assignment_type=assignment_type)
         
+        # Generate grading summary for frontend
+        grading_result = pipeline_state.get("grading_result")
+        if grading_result and isinstance(grading_result, GradingResult):
+            pipeline_state["grading_summary"] = grading_result.get_summary()
+            # Log the summary
+            summary_text = format_error_summary(grading_result)
+            for line in summary_text.split('\n'):
+                print(line)
+        
         # Pipeline completed successfully
         pipeline_state["status"] = "completed"
         pipeline_state["current_step"] = "Complete!"
@@ -478,16 +510,28 @@ async def run_pipeline_task(zip_path: str, course_label: str, assignment_type: s
         print(f"\n[SUCCESS] Grading complete! Output: {graded_path}")
         
     except Exception as e:
-        # Pipeline failed - capture error for frontend display
+        # Pipeline failed - use error classification for user-friendly message
         pipeline_state["status"] = "error"
         pipeline_state["current_step"] = "Error"
-        # Sanitize error message to prevent encoding issues
-        error_msg = _sanitize_for_windows(str(e))
-        # Add diagnostic info for encoding errors (common on Windows)
-        if "encode" in str(e).lower() or "codec" in str(e).lower():
-            error_msg += " [Hint: Check student files for emoji/special characters]"
+        
+        # Classify the error for user-friendly message
+        grading_error = classify_error(e)
+        
+        # Build user-friendly error message
+        error_msg = _sanitize_for_windows(grading_error.problem)
+        action_msg = _sanitize_for_windows(grading_error.action)
+        
+        # Store structured error info
         pipeline_state["error"] = error_msg
+        pipeline_state["error_details"] = {
+            "category": grading_error.category.value,
+            "problem": error_msg,
+            "action": action_msg,
+            "technical": _sanitize_for_windows(str(e))
+        }
+        
         print(f"\n[ERROR] {error_msg}")
+        print(f"[ACTION] {action_msg}")
         
     finally:
         # Restore original stdout
