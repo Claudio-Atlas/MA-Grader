@@ -1,6 +1,6 @@
 # HEALTH.md — MA-Grader System Health
 
-*Last audit: 2026-02-14*
+*Last audit: 2026-02-15*
 *Status: 🟢 PRODUCTION READY (MA1 + MA3)*
 
 ---
@@ -20,19 +20,19 @@
 
 ---
 
-## Persona Scores (Updated 2026-02-14)
+## Persona Scores (Updated 2026-02-15)
 
 | Persona | Score | Status | Notes |
 |---------|-------|--------|-------|
-| Grading Fairness | 8/10 | ✅ Pass | Partial credit system working |
-| Education Expert | 9/10 | ✅ Pass | MA1+MA3 logic + formula docs |
-| QA/Testing | 9/10 | ✅ Pass | 369 tests + CI pipeline |
+| Grading Fairness | 9/10 | ✅ Pass | Edge cases fixed, GRADER_QA process |
+| Education Expert | 9/10 | ✅ Pass | Accepts multiple valid approaches |
+| QA/Testing | 9/10 | ✅ Pass | 391 tests + CI pipeline + GRADER_QA |
 | UX Designer | 9/10 | ✅ Pass | User-friendly errors + summary |
 | DevOps Engineer | 8/10 | ✅ Pass | CI + auto Windows build |
 | Security Engineer | 8/10 | ✅ Pass | ZIP slip fixed, path validation added |
 | Performance | 7/10 | ✅ Pass | Not benchmarked but efficient |
 
-**Overall: A (All personas ≥7, critical ≥8, DevOps now 8/10)**
+**Overall: A (All personas ≥7, Grading Fairness now 9/10)**
 
 ---
 
@@ -136,9 +136,18 @@
 |---------|--------|---------|
 | Comma instead of colon | 50% | `=AVERAGE(B14,B63)` instead of `=AVERAGE(B14:B63)` |
 | Range offset (drag-fill) | 75% | Off by one row/column |
+| Wrong cell reference, right structure | 50% | `=I21-I20` instead of `=I18-I20` (Empirical Rule) |
 | Correct formula, wrong format | 100% | Substance over style |
 | Empty cell | 0% | Missing work |
 | Wrong formula entirely | 0% | Incorrect approach |
+
+### Accepted Formula Variations (MA3)
+
+| Check | Accepted Patterns |
+|-------|-------------------|
+| Percentiles | PERCENTILE, PERCENTILE.INC, PERCENTILE.EXC |
+| Bin MIN/MAX | `=MIN(B12:B61)` or `=MIN(B:B)` (column ref) |
+| Empirical Rule | `=I18-I20` or `=AVERAGE(D14:D63)-STDEV(D14:D63)` |
 
 ---
 
@@ -173,6 +182,11 @@
 
 | Date | Change | Impact |
 |------|--------|--------|
+| 2026-02-15 | GRADER_QA protocol | Systematic QA process for graded output |
+| 2026-02-15 | Percentiles fix | Accept all PERCENTILE variants + column refs |
+| 2026-02-15 | Empirical Rule fix | Accept AVERAGE()-STDEV() + 50% partial credit |
+| 2026-02-15 | Bin Table fix | Accept B:B column reference |
+| 2026-02-15 | Python DQ Checker | No Excel required for DQ checking |
 | 2026-02-08 | Pipeline 8→6 steps | Simplified, removed chart phases |
 | 2026-02-08 | PyInstaller bundling fix | Templates load in .exe |
 | 2026-02-07 | Partial credit system | 50%/75% for common mistakes |

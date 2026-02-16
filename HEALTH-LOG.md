@@ -4,6 +4,86 @@
 
 ---
 
+## 2026-02-15 (Evening Session)
+
+### Session: GRADER_QA Process + MA3 Edge Case Fixes
+
+**Context:** QA run on MAT-144-215-3 revealed several edge cases where students used valid alternative approaches but got 0 points.
+
+#### GATE CHECK
+
+```
+GATE CHECK:
+- Branch: main (direct commit)
+- Student data involved: YES — tested with real submissions
+- Template change: NO
+- Grading logic change: YES — expanded acceptance criteria
+- Tests needed: Manual QA verification (GRADER_QA process)
+- Impact areas: Backend graders (check_percentiles, check_bin_table, check_empirical_rule)
+```
+
+#### ✅ Completed
+
+| Task | Details |
+|------|---------|
+| **GRADER_QA Protocol** | Added trigger word + documentation to CLAUDE.md |
+| **Percentiles fix** | Accept PERCENTILE, PERCENTILE.INC, PERCENTILE.EXC (all variants) |
+| **Percentiles fix** | Don't require exact expected value from F27/F28 (parsing issues) |
+| **Percentiles fix** | Accept D:D column reference as valid range |
+| **Bin Table fix** | Accept B:B entire column reference for MIN/MAX |
+| **Empirical Rule fix** | Accept =AVERAGE()-STDEV() direct calculation (not just cell refs) |
+| **Empirical Rule fix** | 50% partial credit for correct structure but wrong cell references |
+| **Python DQ Checker** | Ported VBA macro to Python (no Excel required) |
+
+#### Edge Cases Fixed
+
+| Student | Issue | Before | After | Fix Applied |
+|---------|-------|--------|-------|-------------|
+| Samantha_Ramirez | Percentiles | 0/6 | **6/6** | Accept PERCENTILE.INC |
+| Jessica_Harvey | Percentiles | 0/6 | **6/6** | Accept PERCENTILE variant |
+| Jensen_Nystrom | Empirical Rule | 0/6 | **6/6** | Accept AVERAGE()-STDEV() |
+| Benjamin_Daniels | Empirical Rule | 0/6 | **3/6** | Partial credit for wrong refs |
+| Philomene_Musoni | Empirical Rule | 0/6 | **3/6** | Partial credit for wrong refs |
+| Jessica_Harvey | Bin Table | 0/6 | **4/6** | Accept MIN(B:B) |
+
+#### Files Modified
+
+| File | Change |
+|------|--------|
+| `graders/ma3_analysis/check_percentiles.py` | Accept all PERCENTILE variants, D:D range |
+| `graders/ma3_visualization/check_bin_table.py` | Accept B:B column reference |
+| `graders/ma3_analysis/check_empirical_rule.py` | Accept AVERAGE()-STDEV(), add 50% partial credit |
+| `CLAUDE.md` | Added GRADER_QA trigger word + protocol |
+| `dq-checker/dq1_checker.py` | NEW — Python port of VBA DQ checker |
+
+#### Commits
+
+| Hash | Message |
+|------|---------|
+| cc203d7 | MA3: Add partial credit and fix validation logic |
+| 7f0c2e7 | Empirical Rule: Accept AVERAGE()-STDEV() direct calculation |
+| a4f8580 | Add GRADER_QA trigger word and protocol to CLAUDE.md |
+| 38d5df1 | Add Python DQ Checker (no Excel required) |
+
+#### GRADER_QA Protocol
+
+New trigger word added: **GRADER_QA**
+
+When used after grading a class:
+1. Compare graded output vs student submissions
+2. Flag zeros that might have valid work
+3. Verify partial credit applied correctly
+4. Identify edge cases needing grader updates
+
+#### Score Impact
+
+| Persona | Before | After |
+|---------|--------|-------|
+| Grading Fairness | 8/10 | **9/10** (better edge case handling) |
+| Education Expert | 9/10 | **9/10** (accepts more valid approaches) |
+
+---
+
 ## 2026-02-15
 
 ### Session: P2 #6 — Better Error Messages
