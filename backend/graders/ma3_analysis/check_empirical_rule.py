@@ -33,7 +33,7 @@ def _normalize_formula(formula: str) -> str:
 def _check_lower_bound_formula(formula: str) -> float:
     """
     Check if formula calculates Mean - StdDev.
-    Expected: =I18-I20 or equivalent
+    Expected: =I18-I20 or =AVERAGE(...)-STDEV(...)
     
     Returns: credit multiplier (1.0, 0.5, or 0.0)
     """
@@ -45,9 +45,16 @@ def _check_lower_bound_formula(formula: str) -> float:
     # Remove dollar signs for easier matching
     normalized_no_dollars = normalized.replace("$", "")
     
-    # Must have I18 (mean) and I20 (stdev) with subtraction
-    # Accept various patterns for FULL CREDIT
+    # FULL CREDIT: References I18 (mean) and I20 (stdev) with subtraction
     if "I18" in normalized_no_dollars and "I20" in normalized_no_dollars and "-" in normalized:
+        return CREDIT_FULL
+    
+    # FULL CREDIT: Calculates Mean - StdDev directly using functions
+    # Pattern: =AVERAGE(...)-STDEV(...) or =AVERAGE(...)-STDEV.S(...) etc.
+    has_average = "AVERAGE(" in normalized
+    has_stdev = any(s in normalized for s in ["STDEV(", "STDEV.S(", "STDEV.P("])
+    has_subtraction = "-" in normalized
+    if has_average and has_stdev and has_subtraction:
         return CREDIT_FULL
     
     # PARTIAL CREDIT: Has subtraction pattern with cell references (wrong cells)
@@ -71,7 +78,7 @@ def _check_lower_bound_formula(formula: str) -> float:
 def _check_upper_bound_formula(formula: str) -> float:
     """
     Check if formula calculates Mean + StdDev.
-    Expected: =I18+I20 or equivalent
+    Expected: =I18+I20 or =AVERAGE(...)+STDEV(...)
     
     Returns: credit multiplier (1.0, 0.5, or 0.0)
     """
@@ -83,8 +90,16 @@ def _check_upper_bound_formula(formula: str) -> float:
     # Remove dollar signs for easier matching
     normalized_no_dollars = normalized.replace("$", "")
     
-    # Must have I18 (mean) and I20 (stdev) with addition - FULL CREDIT
+    # FULL CREDIT: References I18 (mean) and I20 (stdev) with addition
     if "I18" in normalized_no_dollars and "I20" in normalized_no_dollars and "+" in normalized:
+        return CREDIT_FULL
+    
+    # FULL CREDIT: Calculates Mean + StdDev directly using functions
+    # Pattern: =AVERAGE(...)+STDEV(...) or =AVERAGE(...)+STDEV.S(...) etc.
+    has_average = "AVERAGE(" in normalized
+    has_stdev = any(s in normalized for s in ["STDEV(", "STDEV.S(", "STDEV.P("])
+    has_addition = "+" in normalized
+    if has_average and has_stdev and has_addition:
         return CREDIT_FULL
     
     # PARTIAL CREDIT: Has addition pattern with cell references (wrong cells)
