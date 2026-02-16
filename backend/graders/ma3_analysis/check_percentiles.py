@@ -8,8 +8,9 @@ Expected formula patterns:
     PERCENTILE.INC(range, value)
     PERCENTILE.EXC(range, value)
     
-G27 should be the 25th percentile (value ~0.25)
-G28 should be the 75th percentile (value ~0.75)
+The expected percentile values are dynamically generated per student
+based on their name. F27 contains the expected percentile for G27
+(e.g., "5th" means 0.05), and F28 contains the expected for G28.
 """
 
 import re
@@ -28,31 +29,82 @@ def _extract_percentile_value(formula: str) -> Optional[float]:
     """
     Extract the percentile value from a PERCENTILE formula.
     
-    Returns the decimal value (e.g., 0.25, 0.75) or None if not found.
+    Returns the decimal value (e.g., 0.05, 0.40) or None if not found.
     """
     if not formula:
         return None
     
     normalized = _normalize_formula(formula)
     
-    # Pattern to find percentile value: ,0.XX) or ,0.X)
-    # Matches: PERCENTILE(range,0.25), PERCENTILE.INC(range,0.75), etc.
-    match = re.search(r',\s*(0\.\d+)\s*\)', normalized)
+    # Pattern to find percentile value: ,0.XX) or ,0.X) or ,X)
+    # Matches: PERCENTILE(range,0.25), PERCENTILE.INC(range,0.05), etc.
+    
+    # First try decimal format: 0.XX
+    match = re.search(r',\s*(0\.?\d*)\s*\)', normalized)
     if match:
         try:
-            return float(match.group(1))
+            val = float(match.group(1))
+            # If value > 1, it might be a percentage (e.g., 5 instead of 0.05)
+            if val > 1:
+                val = val / 100.0
+            return val
         except ValueError:
-            return None
+            pass
+    
+    # Try integer format: just a number like 5 or 40
+    match = re.search(r',\s*(\d+)\s*\)', normalized)
+    if match:
+        try:
+            val = int(match.group(1))
+            # Convert percentage to decimal (5 -> 0.05, 40 -> 0.40)
+            return val / 100.0
+        except ValueError:
+            pass
     
     return None
 
 
-def _check_percentile_formula(formula: str, cell_ref: str) -> Tuple[bool, str]:
+def _parse_expected_percentile(cell_value) -> Optional[float]:
+    """
+    Parse the expected percentile from F27/F28 cell value.
+    
+    Examples:
+        "5th" -> 0.05
+        "40th" -> 0.40
+        "47th" -> 0.47
+        5 -> 0.05
+        40 -> 0.40
+    """
+    if cell_value is None:
+        return None
+    
+    val_str = str(cell_value).strip().lower()
+    
+    # Remove ordinal suffixes (st, nd, rd, th)
+    val_str = re.sub(r'(st|nd|rd|th)$', '', val_str)
+    
+    try:
+        val = float(val_str)
+        # Convert to decimal if it's a percentage
+        if val >= 1:
+            val = val / 100.0
+        return val
+    except ValueError:
+        return None
+
+
+def _check_percentile_formula(
+    formula: str, 
+    cell_ref: str, 
+    expected_value: Optional[float]
+) -> Tuple[bool, str]:
     """
     Check if formula uses a PERCENTILE function with correct range AND value.
     
-    G27 should be ~25th percentile (0.25 ± 0.05)
-    G28 should be ~75th percentile (0.75 ± 0.05)
+    Args:
+        formula: The student's formula
+        cell_ref: Cell reference (G27 or G28)
+        expected_value: The expected percentile value from F27/F28
     
     Returns: (is_correct, reason)
     """
@@ -74,42 +126,48 @@ def _check_percentile_formula(formula: str, cell_ref: str) -> Tuple[bool, str]:
         return False, "Missing PERCENTILE function"
     
     # Check for correct range reference (D14:D63 or ANCHORARRAY variant)
-    range_patterns = ["D14:D63", "$D$14:$D$63", "$D14:$D63", "ANCHORARRAY"]
+    range_patterns = ["D14:D63", "$D$14:$D$63", "$D14:$D63", "D$14:D$63", "ANCHORARRAY"]
     has_correct_range = any(pattern in normalized for pattern in range_patterns)
     
     if not has_correct_range:
         return False, "Incorrect range reference"
     
-    # Extract and validate the percentile value
-    pct_value = _extract_percentile_value(formula)
+    # Extract the percentile value from student's formula
+    student_value = _extract_percentile_value(formula)
     
-    if pct_value is None:
+    if student_value is None:
         # Could not extract value - might be a cell reference, give partial credit
         return True, "Could not verify percentile value"
     
-    # Validate percentile value based on cell
-    if cell_ref == "G27":
-        # Should be 25th percentile (0.25 ± tolerance)
-        if 0.20 <= pct_value <= 0.30:
-            return True, "Correct"
-        else:
-            return False, f"Expected ~0.25 for 25th percentile, found {pct_value}"
-    elif cell_ref == "G28":
-        # Should be 75th percentile (0.75 ± tolerance)
-        if 0.70 <= pct_value <= 0.80:
-            return True, "Correct"
-        else:
-            return False, f"Expected ~0.75 for 75th percentile, found {pct_value}"
+    # Compare against expected value
+    if expected_value is None:
+        # No expected value found - can't validate, give benefit of doubt
+        return True, "Could not determine expected percentile"
     
-    return True, "OK"
+    # Allow small tolerance for floating point comparison
+    tolerance = 0.02
+    if abs(student_value - expected_value) <= tolerance:
+        return True, "Correct"
+    else:
+        expected_pct = int(expected_value * 100)
+        student_pct = int(student_value * 100)
+        return False, f"Expected {expected_pct}th percentile (0.{expected_pct:02d}), found {student_value}"
 
 
-def check_percentiles(sheet: Worksheet) -> Tuple[float, List[Tuple[str, dict]]]:
+def check_percentiles(
+    sheet: Worksheet,
+    sheet_data: Worksheet = None
+) -> Tuple[float, List[Tuple[str, dict]]]:
     """
     Check percentile formulas in G27 and G28.
     
+    The expected percentile values are read from F27 and F28, which
+    are dynamically calculated based on the student's name.
+    
     Args:
-        sheet: Analysis worksheet
+        sheet: Analysis worksheet (loaded with data_only=False for formulas)
+        sheet_data: Analysis worksheet (loaded with data_only=True for calculated values)
+                   If not provided, will try to read from sheet directly.
         
     Returns:
         Tuple of (score, feedback_list)
@@ -119,18 +177,35 @@ def check_percentiles(sheet: Worksheet) -> Tuple[float, List[Tuple[str, dict]]]:
     total_cells = 2
     points_per_cell = 3.0
     
+    # Read expected percentile values from F27 and F28
+    # These cells contain formulas like =MOD(CODE(MID(B10,3,1)),50)&"th"
+    # We need the calculated values from sheet_data, or fall back to sheet
+    
+    data_sheet = sheet_data if sheet_data is not None else sheet
+    f27_raw = data_sheet['F27'].value
+    f28_raw = data_sheet['F28'].value
+    
+    expected_values = {
+        'G27': _parse_expected_percentile(f27_raw),
+        'G28': _parse_expected_percentile(f28_raw),
+    }
+    
     cells_to_check = ["G27", "G28"]
     
     for cell_ref in cells_to_check:
         cell = sheet[cell_ref]
         formula = cell.value
+        expected = expected_values.get(cell_ref)
         
         if formula is None or str(formula).strip() == "":
             feedback.append(("PERCENTILE_MISSING", {"cell": cell_ref}))
         elif not isinstance(formula, str) or not formula.startswith("="):
-            feedback.append(("PERCENTILE_WRONG", {"cell": cell_ref}))
+            feedback.append(("PERCENTILE_WRONG", {
+                "cell": cell_ref,
+                "reason": "Not a formula"
+            }))
         else:
-            is_correct, reason = _check_percentile_formula(formula, cell_ref)
+            is_correct, reason = _check_percentile_formula(formula, cell_ref, expected)
             if is_correct:
                 correct_count += 1
                 feedback.append(("PERCENTILE_OK", {"cell": cell_ref}))

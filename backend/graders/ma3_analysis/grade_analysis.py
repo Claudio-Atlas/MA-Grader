@@ -31,14 +31,17 @@ from .check_formatting import check_analysis_formatting
 
 def grade_analysis_tab(
     sheet: Worksheet,
-    student_name: str = ""
+    student_name: str = "",
+    sheet_data: Worksheet = None
 ) -> Dict[str, Any]:
     """
     Analysis tab grading orchestrator.
     
     Args:
-        sheet: The openpyxl Worksheet object for the Analysis tab
+        sheet: The openpyxl Worksheet object for the Analysis tab (formulas)
         student_name: Student's name from filename (optional, for validation)
+        sheet_data: Analysis worksheet loaded with data_only=True (calculated values)
+                   Used for reading expected percentile values from F27/F28.
     
     Returns:
         Dict containing scores and feedback for each competency:
@@ -77,7 +80,7 @@ def grade_analysis_tab(
     # ============================================================
     # Percentiles (G27:G28) - 6 points
     # ============================================================
-    percentile_score, percentile_feedback = check_percentiles(sheet)
+    percentile_score, percentile_feedback = check_percentiles(sheet, sheet_data)
     results["percentile_score"] = percentile_score
     results["percentile_feedback"] = percentile_feedback
     

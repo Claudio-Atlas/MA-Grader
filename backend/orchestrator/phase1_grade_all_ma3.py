@@ -95,11 +95,13 @@ def phase1_grade_all_students_ma3(
         logger.info(f"[{idx}/{total_students}] Processing: {student_name}")
 
         student_wb = None
+        student_wb_data = None
         grading_wb = None
         
         try:
             logger.debug(f"  Loading submission: {submission_file}")
-            student_wb = load_workbook(submission_file, data_only=False)
+            student_wb = load_workbook(submission_file, data_only=False)  # For formulas
+            student_wb_data = load_workbook(submission_file, data_only=True)  # For calculated values
             
             logger.debug(f"  Loading grading sheet: {grading_file}")
             grading_wb = load_workbook(grading_file)
@@ -119,7 +121,9 @@ def phase1_grade_all_students_ma3(
                 try:
                     logger.debug(f"  Grading Analysis tab...")
                     ws_analysis = student_wb[sheet_map["Analysis"]]
-                    analysis_results = grade_analysis_tab(ws_analysis, student_name)
+                    # Also get the data sheet for calculated values (used for expected percentiles)
+                    ws_analysis_data = student_wb_data[sheet_map["Analysis"]] if student_wb_data else None
+                    analysis_results = grade_analysis_tab(ws_analysis, student_name, ws_analysis_data)
                     write_ma3_analysis_results(ws_grading, analysis_results)
                     logger.debug(f"  Analysis tab complete")
                 except Exception as e:
