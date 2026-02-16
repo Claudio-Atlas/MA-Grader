@@ -328,7 +328,7 @@ class TestCheckPredictions:
         assert any(code == "IA_PREDICTIONS_NOT_FORMULAS" for code, _ in feedback)
     
     def test_missing_slope_intercept_refs(self, mock_worksheet):
-        """Formulas missing B30/B31 refs should score 0."""
+        """Formulas with hardcoded slope/intercept but correct y=mx+b structure get half credit."""
         ws = mock_worksheet
         
         for row in range(19, 36):
@@ -336,8 +336,9 @@ class TestCheckPredictions:
         
         score, feedback = check_predictions(ws)
         
-        assert score == 0.0
-        assert any(code == "IA_PREDICTIONS_MISSING_REFS" for code, _ in feedback)
+        # Half credit (3.0/6.0) for correct structure with hardcoded values
+        assert score == 3.0
+        assert any(code == "IA_PREDICTIONS_HARDCODED" for code, _ in feedback)
     
     def test_missing_years_ref(self, mock_worksheet):
         """Formulas missing D column refs should score 0."""
