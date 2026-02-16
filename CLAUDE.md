@@ -157,6 +157,42 @@ grep -r "function" backend/graders/
 | **"ask personas"** | Score change against all personas |
 | **"gate"** | Re-read this file, state 3 relevant rules |
 | **"grade check"** | Full GRADING GATE analysis |
+| **"GRADER_QA"** | Compare graded output vs student submissions — check for partial credit issues, edge cases, logic errors |
+
+---
+
+## GRADER_QA Protocol
+
+**Triggered by "GRADER_QA" after grading a class.**
+
+### Process:
+1. Find latest graded output folder
+2. For each student, compare:
+   - Graded scores vs submission formulas
+   - Look for zeros that might have valid work
+   - Verify partial credit was applied correctly
+3. Flag edge cases for manual review
+
+### Output Format:
+```
+GRADER_QA REPORT - [Course Section]
+=====================================
+📊 SCORES BY STUDENT (non-perfect only)
+❌ ZEROS - Check if grader missed valid work
+⚠️  PARTIAL CREDIT - Verify scoring is fair
+
+EDGE CASES FOUND:
+- [Student]: [Issue] - [Action needed]
+```
+
+### Common Edge Cases:
+| Pattern | Should Get |
+|---------|-----------|
+| `=AVERAGE()-STDEV()` instead of `=I18-I20` | Full credit (direct calculation) |
+| `=MIN(B:B)` instead of `=MIN(B12:B61)` | Full credit (column reference valid) |
+| `=PERCENTILE.INC(...)` vs `=PERCENTILE(...)` | Full credit (all variants valid) |
+| `=I21-I20` instead of `=I18-I20` | 50% partial (wrong cell ref, right structure) |
+| Hardcoded value where formula expected | 0% for that cell, but credit for others |
 
 ---
 
