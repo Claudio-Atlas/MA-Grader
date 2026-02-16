@@ -31,7 +31,12 @@ def _check_min_formula(formula: str) -> bool:
         return False
     
     # Should reference the difference data column (B in Visualization)
-    # Common ranges: B12:B61, $B$12:$B$61
+    # Valid patterns:
+    #   - B12:B61, $B$12:$B$61 (explicit range)
+    #   - B:B, $B:$B (entire column reference - valid approach)
+    #   - B14:B63 (if they copied from Analysis sheet reference)
+    if "B:B" in normalized or "$B:$B" in normalized:
+        return True
     if "B" in normalized and ("12" in normalized or "14" in normalized):
         return True
     
@@ -49,8 +54,14 @@ def _check_max_formula(formula: str) -> bool:
     if "MAX(" not in normalized:
         return False
     
-    # Should reference the difference data column
-    if "B" in normalized and ("12" in normalized or "61" in normalized):
+    # Should reference the difference data column (B in Visualization)
+    # Valid patterns:
+    #   - B12:B61, $B$12:$B$61 (explicit range)
+    #   - B:B, $B:$B (entire column reference - valid approach)
+    #   - B14:B63 (if they copied from Analysis sheet reference)
+    if "B:B" in normalized or "$B:$B" in normalized:
+        return True
+    if "B" in normalized and ("12" in normalized or "61" in normalized or "63" in normalized or "14" in normalized):
         return True
     
     return False

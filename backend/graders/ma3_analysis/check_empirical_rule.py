@@ -6,11 +6,21 @@ Grading: 6 points total (3 pts each)
 Expected formulas:
     G36 (Lower Bound): =I18-I20  (Mean - StdDev)
     G37 (Upper Bound): =I18+I20  (Mean + StdDev)
+
+Partial Credit (50%):
+    - Has the right structure (cell - cell or cell + cell) but wrong cell references
+    - Shows understanding of Mean ± StdDev concept even if referencing wrong rows/columns
 """
 
 import re
-from typing import Tuple, List
+from typing import Tuple, List, Union
 from openpyxl.worksheet.worksheet import Worksheet
+
+
+# Credit multipliers
+CREDIT_FULL = 1.0
+CREDIT_WRONG_REFS = 0.5  # Right structure, wrong cell references
+CREDIT_NONE = 0.0
 
 
 def _normalize_formula(formula: str) -> str:
@@ -20,69 +30,79 @@ def _normalize_formula(formula: str) -> str:
     return formula.replace(" ", "").upper()
 
 
-def _check_lower_bound_formula(formula: str) -> bool:
+def _check_lower_bound_formula(formula: str) -> float:
     """
     Check if formula calculates Mean - StdDev.
     Expected: =I18-I20 or equivalent
+    
+    Returns: credit multiplier (1.0, 0.5, or 0.0)
     """
     if not formula or not formula.startswith("="):
-        return False
+        return CREDIT_NONE
     
     normalized = _normalize_formula(formula)
     
+    # Remove dollar signs for easier matching
+    normalized_no_dollars = normalized.replace("$", "")
+    
     # Must have I18 (mean) and I20 (stdev) with subtraction
-    # Accept various patterns
-    valid_patterns = [
-        "=I18-I20",
-        "=$I$18-$I$20",
-        "=$I$18-I20",
-        "=I18-$I$20",
-        "=(I18-I20)",
-        "=($I$18-$I$20)",
-    ]
+    # Accept various patterns for FULL CREDIT
+    if "I18" in normalized_no_dollars and "I20" in normalized_no_dollars and "-" in normalized:
+        return CREDIT_FULL
     
-    normalized_patterns = [_normalize_formula(p) for p in valid_patterns]
+    # PARTIAL CREDIT: Has subtraction pattern with cell references (wrong cells)
+    # Pattern: =CELL-CELL where CELL is like G18, H20, I21, etc.
+    subtraction_pattern = r'^=\$?[A-Z]\$?\d+\s*-\s*\$?[A-Z]\$?\d+$'
+    if re.match(subtraction_pattern, normalized_no_dollars):
+        # They have the right structure but wrong references
+        return CREDIT_WRONG_REFS
     
-    if normalized in normalized_patterns:
-        return True
+    # Also accept patterns like =(G18-I20) with parentheses
+    paren_pattern = r'^=\(\$?[A-Z]\$?\d+\s*-\s*\$?[A-Z]\$?\d+\)$'
+    if re.match(paren_pattern, normalized_no_dollars):
+        # Check if they got I18 and I20 (full credit) or not (partial)
+        if "I18" in normalized_no_dollars and "I20" in normalized_no_dollars:
+            return CREDIT_FULL
+        return CREDIT_WRONG_REFS
     
-    # Also check for AVERAGE - STDEV pattern (if they recalculate)
-    if "I18" in normalized and "I20" in normalized and "-" in normalized:
-        return True
-    
-    return False
+    return CREDIT_NONE
 
 
-def _check_upper_bound_formula(formula: str) -> bool:
+def _check_upper_bound_formula(formula: str) -> float:
     """
     Check if formula calculates Mean + StdDev.
     Expected: =I18+I20 or equivalent
+    
+    Returns: credit multiplier (1.0, 0.5, or 0.0)
     """
     if not formula or not formula.startswith("="):
-        return False
+        return CREDIT_NONE
     
     normalized = _normalize_formula(formula)
     
-    # Must have I18 (mean) and I20 (stdev) with addition
-    valid_patterns = [
-        "=I18+I20",
-        "=$I$18+$I$20",
-        "=$I$18+I20",
-        "=I18+$I$20",
-        "=(I18+I20)",
-        "=($I$18+$I$20)",
-    ]
+    # Remove dollar signs for easier matching
+    normalized_no_dollars = normalized.replace("$", "")
     
-    normalized_patterns = [_normalize_formula(p) for p in valid_patterns]
+    # Must have I18 (mean) and I20 (stdev) with addition - FULL CREDIT
+    if "I18" in normalized_no_dollars and "I20" in normalized_no_dollars and "+" in normalized:
+        return CREDIT_FULL
     
-    if normalized in normalized_patterns:
-        return True
+    # PARTIAL CREDIT: Has addition pattern with cell references (wrong cells)
+    # Pattern: =CELL+CELL where CELL is like G18, H20, I21, etc.
+    addition_pattern = r'^=\$?[A-Z]\$?\d+\s*\+\s*\$?[A-Z]\$?\d+$'
+    if re.match(addition_pattern, normalized_no_dollars):
+        # They have the right structure but wrong references
+        return CREDIT_WRONG_REFS
     
-    # Also check for presence of both cells with addition
-    if "I18" in normalized and "I20" in normalized and "+" in normalized:
-        return True
+    # Also accept patterns like =(G18+I20) with parentheses
+    paren_pattern = r'^=\(\$?[A-Z]\$?\d+\s*\+\s*\$?[A-Z]\$?\d+\)$'
+    if re.match(paren_pattern, normalized_no_dollars):
+        # Check if they got I18 and I20 (full credit) or not (partial)
+        if "I18" in normalized_no_dollars and "I20" in normalized_no_dollars:
+            return CREDIT_FULL
+        return CREDIT_WRONG_REFS
     
-    return False
+    return CREDIT_NONE
 
 
 def check_empirical_rule(sheet: Worksheet) -> Tuple[float, List[Tuple[str, dict]]]:
@@ -94,10 +114,17 @@ def check_empirical_rule(sheet: Worksheet) -> Tuple[float, List[Tuple[str, dict]
         
     Returns:
         Tuple of (score, feedback_list)
+        
+    Partial Credit:
+        - Full credit (100%): Correct formula =I18±I20
+        - Partial credit (50%): Right structure (cell±cell) but wrong references
+        - No credit: Missing, not a formula, or wrong structure
     """
     feedback = []
-    correct_count = 0
+    total_score = 0.0
     points_per_cell = 3.0
+    full_credit_count = 0
+    partial_credit_count = 0
     
     # Check Lower Bound (G36)
     cell_ref = "G36"
@@ -108,11 +135,23 @@ def check_empirical_rule(sheet: Worksheet) -> Tuple[float, List[Tuple[str, dict]
         feedback.append(("EMPIRICAL_LOWER_MISSING", {"cell": cell_ref}))
     elif not isinstance(formula, str) or not formula.startswith("="):
         feedback.append(("EMPIRICAL_LOWER_WRONG", {"cell": cell_ref}))
-    elif _check_lower_bound_formula(formula):
-        correct_count += 1
-        feedback.append(("EMPIRICAL_LOWER_OK", {"cell": cell_ref}))
     else:
-        feedback.append(("EMPIRICAL_LOWER_WRONG", {"cell": cell_ref}))
+        credit = _check_lower_bound_formula(formula)
+        if credit == CREDIT_FULL:
+            total_score += points_per_cell
+            full_credit_count += 1
+            feedback.append(("EMPIRICAL_LOWER_OK", {"cell": cell_ref}))
+        elif credit == CREDIT_WRONG_REFS:
+            total_score += points_per_cell * CREDIT_WRONG_REFS
+            partial_credit_count += 1
+            feedback.append(("EMPIRICAL_LOWER_PARTIAL", {
+                "cell": cell_ref,
+                "reason": "wrong_refs",
+                "hint": "Correct structure (Mean - StdDev) but should reference I18 (Mean) and I20 (StdDev)",
+                "found": formula
+            }))
+        else:
+            feedback.append(("EMPIRICAL_LOWER_WRONG", {"cell": cell_ref}))
     
     # Check Upper Bound (G37)
     cell_ref = "G37"
@@ -123,21 +162,40 @@ def check_empirical_rule(sheet: Worksheet) -> Tuple[float, List[Tuple[str, dict]
         feedback.append(("EMPIRICAL_UPPER_MISSING", {"cell": cell_ref}))
     elif not isinstance(formula, str) or not formula.startswith("="):
         feedback.append(("EMPIRICAL_UPPER_WRONG", {"cell": cell_ref}))
-    elif _check_upper_bound_formula(formula):
-        correct_count += 1
-        feedback.append(("EMPIRICAL_UPPER_OK", {"cell": cell_ref}))
     else:
-        feedback.append(("EMPIRICAL_UPPER_WRONG", {"cell": cell_ref}))
+        credit = _check_upper_bound_formula(formula)
+        if credit == CREDIT_FULL:
+            total_score += points_per_cell
+            full_credit_count += 1
+            feedback.append(("EMPIRICAL_UPPER_OK", {"cell": cell_ref}))
+        elif credit == CREDIT_WRONG_REFS:
+            total_score += points_per_cell * CREDIT_WRONG_REFS
+            partial_credit_count += 1
+            feedback.append(("EMPIRICAL_UPPER_PARTIAL", {
+                "cell": cell_ref,
+                "reason": "wrong_refs",
+                "hint": "Correct structure (Mean + StdDev) but should reference I18 (Mean) and I20 (StdDev)",
+                "found": formula
+            }))
+        else:
+            feedback.append(("EMPIRICAL_UPPER_WRONG", {"cell": cell_ref}))
     
     # Calculate score
-    score = round(correct_count * points_per_cell, 2)
+    score = round(total_score, 2)
     
     # Summary feedback
-    if correct_count == 2:
+    if full_credit_count == 2:
         feedback = [("EMPIRICAL_ALL_CORRECT", {})]
-    elif correct_count == 0:
+    elif full_credit_count == 0 and partial_credit_count == 0:
         feedback.insert(0, ("EMPIRICAL_NONE_CORRECT", {}))
+    elif partial_credit_count > 0:
+        feedback.insert(0, ("EMPIRICAL_PARTIAL_CREDIT", {
+            "full_credit": full_credit_count,
+            "partial_credit": partial_credit_count,
+            "score": score,
+            "max_score": 6.0
+        }))
     else:
-        feedback.insert(0, ("EMPIRICAL_PARTIAL", {"correct": correct_count}))
+        feedback.insert(0, ("EMPIRICAL_PARTIAL", {"correct": full_credit_count}))
     
     return score, feedback
