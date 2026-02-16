@@ -46,7 +46,7 @@
   "FREQ_REL_MISSING": "The Relative Frequency formula in {cell} is missing. Please enter a formula that calculates frequency divided by total.",
 
   "HIST_ALL_CORRECT": "Your histogram is complete with the correct data source, chart title, and axis titles.",
-  "HIST_PARTIAL": "Your histogram meets {correct} out of 4 criteria. Please review the issues noted below.",
+  "HIST_PARTIAL": "Your histogram meets {correct} out of 6 criteria. Please review the issues noted below.",
   "HIST_MISSING": "No histogram or bar chart was found on the Visualization tab. Please create a bar chart using your frequency data.",
 
   "HIST_FOUND": "A bar chart is present on the Visualization tab.",
