@@ -51,10 +51,38 @@ def grade_row17_date_entries_v2(sheet):
                 score += 0.5
                 feedback.append(("CC17_DATE_VALID", {"cell": cell, "date": str(date_val), "age_days": age_days}))
             else:
-                feedback.append((
-                    "CC17_DATE_TOO_OLD",
-                    {"cell": cell, "date": str(date_val), "max_days": max_age_days, "age_days": age_days}
-                ))
+                # Fallback: Check if date would be valid with corrected year (off by 1 year)
+                # Students sometimes accidentally use last year's date
+                corrected_date = None
+                try:
+                    # Try adjusting year to current year
+                    corrected_date = date_val.replace(year=today.year)
+                    corrected_age = abs((today - corrected_date).days)
+                except ValueError:
+                    # Handle Feb 29 edge case
+                    corrected_age = 999
+                
+                # Also try previous year (in case we're in early January and they used late December of "next" year)
+                try:
+                    corrected_date_prev = date_val.replace(year=today.year - 1)
+                    corrected_age_prev = abs((today - corrected_date_prev).days)
+                except ValueError:
+                    corrected_age_prev = 999
+                
+                if corrected_age <= max_age_days or corrected_age_prev <= max_age_days:
+                    # Wrong year but date otherwise valid - give full credit
+                    score += 0.5
+                    feedback.append(("CC17_DATE_VALID", {
+                        "cell": cell, 
+                        "date": str(date_val), 
+                        "age_days": age_days,
+                        "note": "Year appears off by 1, but date accepted"
+                    }))
+                else:
+                    feedback.append((
+                        "CC17_DATE_TOO_OLD",
+                        {"cell": cell, "date": str(date_val), "max_days": max_age_days, "age_days": age_days}
+                    ))
 
             parsed_dates.append(date_val)
 

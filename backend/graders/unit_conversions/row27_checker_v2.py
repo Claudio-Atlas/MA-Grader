@@ -144,12 +144,21 @@ def grade_row_27_v2(sheet: Worksheet) -> Dict[str, Any]:
     # ============================================================
     # Must reference C27, F27, I27 with multiplication
     required_refs = ["C27", "F27", "I27"]
+    ratio_refs = ["F27", "I27"]  # Just the ratio columns
 
     if all(ref in O for ref in required_refs) and "*" in O:
+        # Full credit: references starting value AND all ratios
         final_formula_score = 2
         final_formula_feedback.append((
             "UC27_FINAL_FORMULA_CORRECT",
             {"cell": "O27"}
+        ))
+    elif all(ref in O for ref in ratio_refs) and "*" in O and "C27" not in O:
+        # Partial credit: references ratios but hardcoded starting value
+        final_formula_score = 1.5
+        final_formula_feedback.append((
+            "UC27_FINAL_FORMULA_PARTIAL",
+            {"cell": "O27", "note": "Formula references ratios correctly but uses hardcoded starting value. Use C27 for full credit."}
         ))
     else:
         final_formula_feedback.append((

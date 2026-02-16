@@ -53,6 +53,34 @@ def _has_required_refs(formula: str) -> bool:
     return "B30" in normalized and "B31" in normalized
 
 
+def _has_linear_structure(formula: str) -> bool:
+    """
+    Check if formula has y=mx+b structure (multiplication and addition/subtraction).
+    
+    This is used for partial credit when students hardcode slope/intercept
+    but have the correct mathematical structure.
+    
+    Args:
+        formula: The Excel formula string to check
+    
+    Returns:
+        bool: True if formula has multiplication AND addition/subtraction
+    
+    Example:
+        >>> _has_linear_structure("=148.85*D19-868.95")
+        True
+        >>> _has_linear_structure("=B30*D19+B31")
+        True
+        >>> _has_linear_structure("=D19*5")  # No addition/subtraction
+        False
+    """
+    if not formula:
+        return False
+    has_mult = "*" in formula
+    has_add_sub = "+" in formula or "-" in formula.replace("=-", "").replace("E-", "")  # Ignore leading minus or scientific notation
+    return has_mult and has_add_sub
+
+
 def _has_years_ref(formula: str, row: int) -> bool:
     """
     Check if formula references the years of experience cell for this row.
@@ -123,6 +151,7 @@ def check_predictions(ws: Worksheet) -> Tuple[float, List[Tuple[str, Dict[str, A
     missing_slope_intercept = 0
     missing_years_ref = 0
     not_formula = 0
+    hardcoded_linear = 0  # Has y=mx+b structure but hardcoded values
 
     # Check each prediction cell
     for row in range(19, 36):  # Rows 19-35 inclusive
@@ -147,6 +176,9 @@ def check_predictions(ws: Worksheet) -> Tuple[float, List[Tuple[str, Dict[str, A
         # Check 2: Does formula reference the years column for this row?
         has_years = _has_years_ref(formula, row)
         
+        # Check 3: Does formula have y=mx+b structure (for partial credit)?
+        has_linear_structure = _has_linear_structure(formula)
+        
         # Categorize the result
         if has_slope_intercept and has_years:
             # Formula is correct
@@ -154,8 +186,11 @@ def check_predictions(ws: Worksheet) -> Tuple[float, List[Tuple[str, Dict[str, A
         elif has_slope_intercept and not has_years:
             # Has slope/intercept but wrong/missing years reference
             missing_years_ref += 1
+        elif not has_slope_intercept and has_years and has_linear_structure:
+            # Has y=mx+b structure with years ref but hardcoded slope/intercept
+            hardcoded_linear += 1
         elif not has_slope_intercept:
-            # Missing slope and/or intercept reference
+            # Missing slope and/or intercept reference (no valid structure)
             missing_slope_intercept += 1
 
     # ============================================================
@@ -166,6 +201,28 @@ def check_predictions(ws: Worksheet) -> Tuple[float, List[Tuple[str, Dict[str, A
     # All correct - full credit
     if correct_count == total_rows:
         return 6.0, [("IA_PREDICTIONS_ALL_CORRECT", {"range": "E19:E35"})]
+
+    # Check for hardcoded linear formulas (half credit case)
+    # If ALL formulas have y=mx+b structure but hardcoded values, give 50% credit
+    if correct_count == 0 and hardcoded_linear == total_rows:
+        feedback.append(("IA_PREDICTIONS_HARDCODED", {
+            "count": hardcoded_linear,
+            "range": "E19:E35",
+            "note": "Formulas have correct y=mx+b structure but use hardcoded slope/intercept values. Use B30 and B31 cell references for full credit."
+        }))
+        return 3.0, feedback  # Half credit (3 out of 6)
+    
+    # Partial hardcoded case - some correct, some hardcoded
+    if hardcoded_linear > 0 and correct_count == 0:
+        # All checked formulas are hardcoded (but maybe some weren't formulas at all)
+        hardcoded_ratio = hardcoded_linear / total_rows
+        score = round(3.0 * hardcoded_ratio, 1)  # Proportional half credit
+        feedback.append(("IA_PREDICTIONS_HARDCODED", {
+            "count": hardcoded_linear,
+            "range": "E19:E35",
+            "note": "Formulas have correct y=mx+b structure but use hardcoded slope/intercept values."
+        }))
+        return score, feedback
 
     # None correct - zero credit with specific feedback
     if correct_count == 0:
@@ -190,11 +247,16 @@ def check_predictions(ws: Worksheet) -> Tuple[float, List[Tuple[str, Dict[str, A
             feedback.append(("IA_PREDICTIONS_NONE_CORRECT", {"range": "E19:E35"}))
         return 0.0, feedback
 
-    # Partial credit - proportional scoring
-    score = round(correct_count * (6 / total_rows), 1)
+    # Partial credit - proportional scoring (mix of correct and other)
+    # Full credit for correct, half for hardcoded
+    full_pts = correct_count * (6 / total_rows)
+    half_pts = hardcoded_linear * (3 / total_rows)
+    score = round(full_pts + half_pts, 1)
     
     # Build details string for partial credit feedback
     details = []
+    if hardcoded_linear > 0:
+        details.append(f"{hardcoded_linear} hardcoded (half credit)")
     if missing_slope_intercept > 0:
         details.append(f"{missing_slope_intercept} missing B30/B31 refs")
     if missing_years_ref > 0:

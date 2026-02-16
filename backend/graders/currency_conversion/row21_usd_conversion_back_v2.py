@@ -156,6 +156,9 @@ def grade_row21_usd_conversion_back_v2(sheet, values_sheet=None):
                     actual_value = _get_cell_value_safe(values_sheet, cell_ref)
                     value_correct = _values_match(actual_value, expected_value)
             
+            # Check if formula has division (correct concept) but hardcoded values
+            has_division = "/" in raw_formula or "1/" in raw_formula
+            
             # Award credit: need refs + value (if we can check), or exact match
             if exact_match:
                 formula_score += 2.0
@@ -184,6 +187,14 @@ def grade_row21_usd_conversion_back_v2(sheet, values_sheet=None):
                         "expected": f"=D4/{source_rate_cell}",
                         "note": "Formula has correct refs but calculated value is incorrect"
                     }))
+            elif has_division:
+                # Partial credit: formula shows correct concept (division) but hardcoded values
+                formula_score += 0.75
+                feedback.append(("CC21_FORMULA_PARTIAL", {
+                    "cell": cell_ref,
+                    "expected": f"=D4/{source_rate_cell}",
+                    "note": "Formula uses division (correct concept) but hardcoded values. Use cell references for full credit."
+                }))
             else:
                 feedback.append(("CC21_FORMULA_BAD", {"cell": cell_ref, "expected": f"=D4/{source_rate_cell}"}))
 

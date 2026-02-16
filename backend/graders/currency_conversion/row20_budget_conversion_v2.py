@@ -118,6 +118,9 @@ def grade_row20_budget_conversion_v2(sheet, values_sheet=None):
                     actual_value = _get_cell_value_safe(values_sheet, target_cell)
                     value_correct = _values_match(actual_value, expected_value)
 
+            # Check if formula has multiplication (correct concept) but hardcoded values
+            has_multiplication = "*" in raw_formula
+            
             # Award credit: need refs + value (if we can check), or exact match
             if exact_match:
                 formula_score += 2.0
@@ -148,6 +151,16 @@ def grade_row20_budget_conversion_v2(sheet, values_sheet=None):
                         "expected_b": f"={rate_ref}*B4",
                         "note": "Formula has correct refs but calculated value is incorrect"
                     }))
+            elif has_multiplication:
+                # Partial credit: formula shows correct concept (multiplication) but hardcoded values
+                formula_score += 0.75
+                feedback.append(("CC20_FORMULA_PARTIAL", {
+                    "cell": target_cell,
+                    "rate_ref": rate_ref,
+                    "expected_a": f"=B4*{rate_ref}",
+                    "expected_b": f"={rate_ref}*B4",
+                    "note": "Formula uses multiplication (correct concept) but hardcoded values. Use cell references for full credit."
+                }))
             else:
                 feedback.append((
                     "CC20_FORMULA_BAD",

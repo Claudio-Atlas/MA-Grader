@@ -176,10 +176,19 @@ def grade_row_26_v2(sheet: Worksheet) -> Dict[str, Any]:
     # ============================================================
     # Final formula must reference C26, F26, and I26 with multiplication
     required_refs = ["C26", "F26", "I26"]
+    ratio_refs = ["F26", "I26"]  # Just the ratio columns
 
     if all(ref in O for ref in required_refs) and "*" in O:
+        # Full credit: references starting value AND all ratios
         final_formula_score = 2
         final_formula_feedback.append(("UC26_FINAL_FORMULA_CORRECT", {"cell": "O26"}))
+    elif all(ref in O for ref in ratio_refs) and "*" in O and "C26" not in O:
+        # Partial credit: references ratios but hardcoded starting value
+        final_formula_score = 1.5
+        final_formula_feedback.append(("UC26_FINAL_FORMULA_PARTIAL", {
+            "cell": "O26",
+            "note": "Formula references ratios correctly but uses hardcoded starting value. Use C26 for full credit."
+        }))
     else:
         final_formula_feedback.append(("UC26_FINAL_FORMULA_INCORRECT", {
             "cell": "O26",

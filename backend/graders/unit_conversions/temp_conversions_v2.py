@@ -194,17 +194,23 @@ def grade_temp_conversions_v2(sheet: Worksheet) -> Dict[str, Any]:
     # Check if formula has all required components
     c40_has_refs = c40_has_formula and all(fragment in c40 for fragment in required_c40)
 
+    # Check if formula has correct structure but hardcoded values (no A40 reference)
+    c40_has_structure = (c40_has_formula and 
+                         "5/9" in c40 and 
+                         "-32" in c40 and
+                         "A40" not in c40)
+    
     if c40_has_refs:
         # Full credit: formula with correct cell references and conversion factor
         score += 2
         feedback.append(("UC_TEMP_C40_CORRECT", {"cell": "C40"}))
-    elif c40_has_formula and _check_c40_calculated_value(sheet):
-        # Partial credit: formula produces correct value but missing cell refs
+    elif c40_has_structure or (c40_has_formula and _check_c40_calculated_value(sheet)):
+        # Partial credit: formula has correct math structure but hardcoded values
         score += 1
         feedback.append(("UC_TEMP_C40_PARTIAL", {
             "cell": "C40",
-            "note": "Formula produces correct value but missing cell reference (A40). "
-                    "Use cell references for full credit."
+            "note": "Formula has correct conversion math but uses hardcoded values. "
+                    "Use cell reference (A40) for full credit."
         }))
     else:
         # No credit
@@ -220,19 +226,31 @@ def grade_temp_conversions_v2(sheet: Worksheet) -> Dict[str, Any]:
     # Check if it's a formula with multiplication
     a41_has_formula = a41_is_formula and isinstance(a41, str) and "*" in a41
     # Check if formula has all required components
-    a41_has_refs = a41_has_formula and all(fragment in a41 for fragment in required_a41)
+    # STRICT: +32 must be added at end, not multiplied inside parens
+    a41_plus32_correct = "+32" in a41 and "+32)" not in a41
+    a41_has_refs = a41_has_formula and "C41" in a41 and "9/5" in a41 and a41_plus32_correct
 
+    # Check if formula has correct structure but hardcoded values (no C41 reference)
+    # STRICT: +32 must be ADDED at the end, not multiplied inside parentheses
+    # Good: =(9/5)*15+32  Bad: =(9/5)*(15+32)
+    # Check that "+32" is not followed by ")" which would indicate it's inside parens
+    a41_plus32_at_end = "+32" in a41 and "+32)" not in a41
+    a41_has_structure = (a41_has_formula and 
+                         "9/5" in a41 and 
+                         a41_plus32_at_end and
+                         "C41" not in a41)
+    
     if a41_has_refs:
         # Full credit: formula with correct cell references and conversion factor
         score += 2
         feedback.append(("UC_TEMP_A41_CORRECT", {"cell": "A41"}))
-    elif a41_has_formula and _check_a41_calculated_value(sheet):
-        # Partial credit: formula produces correct value but missing cell refs
+    elif a41_has_structure or (a41_has_formula and _check_a41_calculated_value(sheet)):
+        # Partial credit: formula has correct math structure but hardcoded values
         score += 1
         feedback.append(("UC_TEMP_A41_PARTIAL", {
             "cell": "A41", 
-            "note": "Formula produces correct value but missing cell reference (C41). "
-                    "Use cell references for full credit."
+            "note": "Formula has correct conversion math but uses hardcoded values. "
+                    "Use cell reference (C41) for full credit."
         }))
     else:
         # No credit

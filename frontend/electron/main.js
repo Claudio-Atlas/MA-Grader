@@ -53,12 +53,23 @@ function startPythonBackend() {
       env: processEnv
     });
   } else {
-    // Development: use Python directly
+    // Development: use Python from venv
     const serverScript = path.join(backendPath, 'server.py');
     console.log('Starting Python backend from:', serverScript);
     
-    // Use python3 on macOS/Linux, python on Windows
-    const pythonCmd = process.platform === 'win32' ? 'python' : 'python3';
+    // Use venv python in dev mode
+    let pythonCmd;
+    if (process.platform === 'win32') {
+      pythonCmd = path.join(backendPath, 'venv', 'Scripts', 'python.exe');
+    } else {
+      pythonCmd = path.join(backendPath, 'venv', 'bin', 'python');
+    }
+    
+    // Fallback to system python if venv doesn't exist
+    if (!require('fs').existsSync(pythonCmd)) {
+      pythonCmd = process.platform === 'win32' ? 'python' : 'python3';
+      console.log('Venv not found, using system Python');
+    }
     
     pythonProcess = spawn(pythonCmd, [serverScript], {
       cwd: backendPath,
