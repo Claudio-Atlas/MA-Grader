@@ -118,7 +118,16 @@ def grade_row19_exchange_rates_v2(sheet, live_rates=None):
         fmt = str(number_format) if number_format is not None else ""
         fmt_norm = fmt.replace('"', "").lower()
 
-        if ("0.000" in fmt_norm) or ("#.000" in fmt_norm):
+        # Accept explicit 0.000 format OR a value that actually has 3+ decimal digits
+        has_format_code = ("0.000" in fmt_norm) or ("#.000" in fmt_norm)
+        has_3_decimals = False
+        if isinstance(student_rate, (int, float)):
+            rate_str = str(float(student_rate))
+            if '.' in rate_str:
+                decimal_digits = len(rate_str.split('.')[1].rstrip('0'))
+                has_3_decimals = decimal_digits >= 3
+
+        if has_format_code or has_3_decimals:
             format_score += 0.25
             feedback.append(("CC19_FORMAT_OK", {"rate_cell": rate_cell}))
         else:

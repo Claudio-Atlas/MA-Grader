@@ -1,7 +1,7 @@
 # utilities/paths.py
 import os
 
-APP_FOLDER = "MA1_Autograder"  # default folder name
+APP_FOLDER = "MA_Grader"  # default folder name
 
 # Custom workspace override (set by server.py)
 _custom_workspace = None
@@ -23,10 +23,9 @@ def workspace_root() -> str:
     global _custom_workspace
     
     if _custom_workspace and os.path.isdir(_custom_workspace):
-        # Use custom workspace - create MA_Grader subfolder for organization
-        root = os.path.join(_custom_workspace, "MA_Grader_Output")
-        os.makedirs(root, exist_ok=True)
-        return root
+        # Use custom workspace directly (no extra nesting)
+        os.makedirs(_custom_workspace, exist_ok=True)
+        return _custom_workspace
     
     # Default: ~/Documents/MA1_Autograder
     docs = os.path.join(os.path.expanduser("~"), "Documents")
